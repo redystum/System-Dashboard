@@ -14,11 +14,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/sendfile.h>
 
 #include "server.h"
 #include "utils.h"
 
-#define BUFFER_SIZE 104857600
+#define BUFFER_SIZE 8192
 
 const char *get_file_extension(const char *file_name) {
     const char *dot = strrchr(file_name, '.');
@@ -42,193 +43,160 @@ const char *get_mime_type(const char *file_ext) {
     }
 }
 
-bool case_insensitive_compare(const char *s1, const char *s2) {
-    while (*s1 && *s2) {
-        if (tolower((unsigned char)*s1) != tolower((unsigned char)*s2)) {
-            return false;
-        }
-        s1++;
-        s2++;
-    }
-    return *s1 == *s2;
-}
-
-char *get_file_case_insensitive(const char *file_name) {
-    DIR *dir = opendir(".");
-    if (dir == NULL) {
-        ERROR(1, "opendir");
-        return NULL;
-    }
-
-    struct dirent *entry;
-    char *found_file_name = NULL;
-    while ((entry = readdir(dir)) != NULL) {
-        if (case_insensitive_compare(entry->d_name, file_name)) {
-            found_file_name = entry->d_name;
-            break;
-        }
-    }
-
-    closedir(dir);
-    return found_file_name;
-}
-
 char *url_decode(const char *src) {
     size_t src_len = strlen(src);
     char *decoded = malloc(src_len + 1);
     size_t decoded_len = 0;
 
-    // decode %2x to hex
     for (size_t i = 0; i < src_len; i++) {
         if (src[i] == '%' && i + 2 < src_len) {
             int hex_val;
-            sscanf(src + i + 1, "%2d", &hex_val);
-            decoded[decoded_len++] = hex_val;
+            sscanf(src + i + 1, "%2x", &hex_val);
+            decoded[decoded_len++] = (char)hex_val;
             i += 2;
         } else {
             decoded[decoded_len++] = src[i];
         }
     }
 
-    // add null terminator
     decoded[decoded_len] = '\0';
     return decoded;
 }
 
-void build_http_response(const char *file_name,
-                        const char *file_ext,
-                        char *response,
-                        size_t *response_len) {
-    // build HTTP header
-    const char *mime_type = get_mime_type(file_ext);
-    char *header = (char *)malloc(BUFFER_SIZE * sizeof(char));
-    snprintf(header, BUFFER_SIZE,
-             "HTTP/1.1 200 OK\r\n"
-             "Content-Type: %s\r\n"
-             "\r\n",
-             mime_type);
-
-    // if file not exist, response is 404 Not Found
+void send_http_response(int client_fd, const char *file_name, const char *file_ext) {
     int file_fd = open(file_name, O_RDONLY);
     if (file_fd == -1) {
-        snprintf(response, BUFFER_SIZE,
-                 "HTTP/1.1 404 Not Found\r\n"
-                 "Content-Type: text/plain\r\n"
-                 "\r\n"
-                 "404 Not Found");
-        *response_len = strlen(response);
+        const char *not_found_response =
+            "HTTP/1.1 404 Not Found\r\n"
+            "Content-Type: text/plain\r\n"
+            "Content-Length: 13\r\n"
+            "\r\n"
+            "404 Not Found";
+        send(client_fd, not_found_response, strlen(not_found_response), 0);
         return;
     }
 
-    // get file size for Content-Length
     struct stat file_stat;
     fstat(file_fd, &file_stat);
     off_t file_size = file_stat.st_size;
 
-    // copy header to response buffer
-    *response_len = 0;
-    memcpy(response, header, strlen(header));
-    *response_len += strlen(header);
+    char header[BUFFER_SIZE];
+    int header_len = snprintf(header, BUFFER_SIZE,
+                              "HTTP/1.1 200 OK\r\n"
+                              "Content-Type: %s\r\n"
+                              "Content-Length: %ld\r\n"
+                              "\r\n",
+                              get_mime_type(file_ext), file_size);
 
-    // copy file to response buffer
-    ssize_t bytes_read;
-    while ((bytes_read = read(file_fd,
-                            response + *response_len,
-                            BUFFER_SIZE - *response_len)) > 0) {
-        *response_len += bytes_read;
+    send(client_fd, header, header_len, 0);
+
+    off_t offset = 0;
+    while (offset < file_size) {
+        ssize_t sent = sendfile(client_fd, file_fd, &offset, file_size - offset);
+        if (sent <= 0) {
+            perror("sendfile");
+            break;
+        }
     }
-    free(header);
+
     close(file_fd);
 }
 
 void *handle_client(void *arg) {
     int client_fd = *((int *)arg);
-    char *buffer = (char *)malloc(BUFFER_SIZE * sizeof(char));
-
-    // receive request data from client and store into buffer
-    ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE, 0);
-    if (bytes_received > 0) {
-        // check if request is GET
-        regex_t regex;
-        regcomp(&regex, "^GET /([^ ]*) HTTP/1", REG_EXTENDED);
-        regmatch_t matches[2];
-
-        if (regexec(&regex, buffer, 2, matches, 0) == 0) {
-            // extract filename from request and decode URL
-            buffer[matches[1].rm_eo] = '\0';
-            const char *url_encoded_file_name = buffer + matches[1].rm_so;
-            char *file_name = url_decode(url_encoded_file_name);
-
-            // get file extension
-            char file_ext[32];
-            strcpy(file_ext, get_file_extension(file_name));
-
-            // build HTTP response
-            char *response = (char *)malloc(BUFFER_SIZE * 2 * sizeof(char));
-            size_t response_len;
-            build_http_response(file_name, file_ext, response, &response_len);
-
-            // send HTTP response to client
-            send(client_fd, response, response_len, 0);
-
-            free(response);
-            free(file_name);
-        }
-        regfree(&regex);
-    }
-    close(client_fd);
     free(arg);
-    free(buffer);
+
+    char buffer[BUFFER_SIZE];
+    ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
+    if (bytes_received <= 0) {
+        close(client_fd);
+        return NULL;
+    }
+
+    buffer[bytes_received] = '\0';
+
+    regex_t regex;
+    regcomp(&regex, "^GET /([^ ]*) HTTP/1", REG_EXTENDED);
+    regmatch_t matches[2];
+
+    if (regexec(&regex, buffer, 2, matches, 0) == 0) {
+        buffer[matches[1].rm_eo] = '\0';
+        const char *url_encoded_file_name = buffer + matches[1].rm_so;
+        char *file_name = url_decode(url_encoded_file_name);
+
+        const char *file_ext = get_file_extension(file_name);
+        send_http_response(client_fd, file_name, file_ext);
+
+        free(file_name);
+    } else {
+        const char *bad_request_response =
+            "HTTP/1.1 400 Bad Request\r\n"
+            "Content-Type: text/plain\r\n"
+            "Content-Length: 11\r\n"
+            "\r\n"
+            "Bad Request";
+        send(client_fd, bad_request_response, strlen(bad_request_response), 0);
+    }
+
+    regfree(&regex);
+    close(client_fd);
     return NULL;
 }
 
 int server_init(int port) {
-    int server_fd;
-    struct sockaddr_in server_addr;
-
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        ERROR(1, "socket failed");
+    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd < 0) {
+        perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
-    // config socket
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(port);
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    // bind socket to port
-    if (bind(server_fd,
-            (struct sockaddr *)&server_addr,
-            sizeof(server_addr)) < 0) {
-        ERROR(1, "bind failed");
+    struct sockaddr_in server_addr = {
+        .sin_family = AF_INET,
+        .sin_addr.s_addr = INADDR_ANY,
+        .sin_port = htons(port)
+    };
+
+    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        perror("bind failed");
+        close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    // listen for connections
     if (listen(server_fd, 10) < 0) {
-        ERROR(1, "listen failed");
+        perror("listen failed");
+        close(server_fd);
         exit(EXIT_FAILURE);
     }
 
     printf("Server listening on port %d\n", port);
+
     while (1) {
-        // client info
         struct sockaddr_in client_addr;
         socklen_t client_addr_len = sizeof(client_addr);
         int *client_fd = malloc(sizeof(int));
-
-        // accept client connection
-        if ((*client_fd = accept(server_fd,
-                                (struct sockaddr *)&client_addr,
-                                &client_addr_len)) < 0) {
-            ERROR(1, "accept failed");
+        if (!client_fd) {
+            perror("malloc failed");
             continue;
         }
 
-        // create a new thread to handle client request
+        *client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_addr_len);
+        if (*client_fd < 0) {
+            perror("accept failed");
+            free(client_fd);
+            continue;
+        }
+
         pthread_t thread_id;
-        pthread_create(&thread_id, NULL, handle_client, (void *)client_fd);
-        pthread_detach(thread_id);
+        if (pthread_create(&thread_id, NULL, handle_client, client_fd) != 0) {
+            perror("pthread_create failed");
+            close(*client_fd);
+            free(client_fd);
+        } else {
+            pthread_detach(thread_id);
+        }
     }
 
     close(server_fd);
