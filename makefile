@@ -83,3 +83,7 @@ pmccabe:
 # entry to run the cppcheck tool
 cppcheck:
 	cppcheck --enable=all --verbose *.c *.h
+
+# run make and run
+run:
+	make && ./$(PROGRAM)

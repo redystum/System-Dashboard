@@ -38,6 +38,8 @@ const char *get_mime_type(const char *file_ext) {
         return "image/jpeg";
     } else if (strcmp(file_ext, "png") == 0) {
         return "image/png";
+    } else if (strcmp(file_ext, "css") == 0) {
+	return "text/css";
     } else {
         return "application/octet-stream";
     }
