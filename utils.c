@@ -65,7 +65,7 @@ void ut_string_slice_original(ut_string_slice_t* str_slice, char** str)
     (*str)[str_slice->len] = '\0';
 }
 
-int ut_read_file(char* file_name, char** buffer)
+int ut_read_file(const char* file_name, char** buffer)
 {
     FILE* file = fopen(file_name, "r");
     if (file == NULL) {
@@ -112,7 +112,7 @@ void ut_array_push(ut_dynamic_array_t* arr, void* elem)
         }
     }
 
-    memcpy(arr->data + arr->len * arr->size, elem, arr->size);
+    memcpy((char*)arr->data + arr->len * arr->size, elem, arr->size);
     arr->len++;
 }
 
@@ -122,7 +122,7 @@ void* ut_array_get(ut_dynamic_array_t* arr, unsigned int index)
         return NULL;
     }
 
-    return arr->data + index * arr->size;
+    return (char*)arr->data + index * arr->size;
 }
 
 void ut_array_free(ut_dynamic_array_t* arr)

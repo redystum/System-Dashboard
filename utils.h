@@ -5,11 +5,6 @@
 
 #define DEBUG_ENABLED
 
-#define IMPLEMENT_READ_FILE
-#define IMPLEMENT_STRING_SLICE
-#define IMPLEMENT_DYNAMIC_ARRAY
-#define IMPLEMENT_STRING
-
 /*
  * Prints an error message and aborts the program
  *
@@ -43,7 +38,6 @@
 
 #define EOL '\n'
 
-#ifdef IMPLEMENT_STRING_SLICE
 /*
  * Represents a slice of a string
  */
@@ -59,9 +53,7 @@ typedef struct {
  * @param str the string to store the copied content
  */
 void ut_string_slice_original(ut_string_slice_t* str_slice, char** str);
-#endif // IMPLEMENT_STRING_SLICE
 
-#ifdef IMPLEMENT_READ_FILE
 /*
  * Reads a file and stores its content in a buffer
  *
@@ -70,10 +62,8 @@ void ut_string_slice_original(ut_string_slice_t* str_slice, char** str);
  *
  * @return the length of the file or -1 if an error occurred
  */
-int ut_read_file(char* file_name, char** buffer);
-#endif // IMPLEMENT_READ_FILE
+int ut_read_file(const char* file_name, char** buffer);
 
-#ifdef IMPLEMENT_DYNAMIC_ARRAY
 /*
  * Represents a dynamic array
  */
@@ -94,9 +84,7 @@ void ut_array_init(ut_dynamic_array_t* arr, size_t size);
 void ut_array_push(ut_dynamic_array_t* arr, void* elem);
 void* ut_array_get(ut_dynamic_array_t* arr, unsigned int index);
 void ut_array_free(ut_dynamic_array_t* arr);
-#endif // IMPLEMENT_DYNAMIC_ARRAY
 
-#ifdef IMPLEMENT_STRING
 /*
  * Concatenates strings
  *
@@ -111,7 +99,6 @@ void ut_str_cat(char **dest, ...);
  * @param str the string to trim
  */
 void ut_trim(char* str);
-#endif // IMPLEMENT_STRING
 
 void error(int code, char* fmt, ...);
 void warning(char* format, ...);

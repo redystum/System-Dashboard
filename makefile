@@ -43,7 +43,7 @@ main.o: main.c utils.h server.h $(PROGRAM_OPT).h
 $(PROGRAM_OPT).o: $(PROGRAM_OPT).c $(PROGRAM_OPT).h
 
 utils.o: utils.c utils.h
-server.o: server.c server.h utils.h html_parser.h
+server.o: server.c server.h
 html_parser: html_parser.c html_parser.c
 
 # disable warnings from gengetopt generated files
@@ -86,4 +86,5 @@ cppcheck:
 
 # run make and run
 run:
-	make && ./$(PROGRAM)
+	make 
+	./$(PROGRAM)
