@@ -72,7 +72,15 @@ char* url_decode(const char* src)
 void send_http_response(int client_fd, const char* file_name, const char* file_ext)
 {
     if (strcmp(file_ext, "html") == 0) {
-        char* html_content = html_parse(file_name);
+
+        parser_args* args = malloc(sizeof(parser_args) * 2);
+        args[0].key = "cpu";
+        args[0].val = "18.5";
+
+        args[1].key = "ram";
+        args[1].val = "23";
+
+        char* html_content = html_parse(file_name, args);
         if (!html_content) {
             const char* not_found_response = "HTTP/1.1 404 Not Found\r\n"
                                              "Content-Type: text/plain\r\n"
