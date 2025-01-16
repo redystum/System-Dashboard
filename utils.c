@@ -6,15 +6,21 @@
 
 #include "utils.h"
 
+#define COLOR_RED "\x1b[31m"
+#define COLOR_YELLOW "\x1b[33m"
+#define COLOR_BLUE "\x1b[34m"
+#define COLOR_PURPLE "\x1b[35m"
+#define COLOR_RESET "\x1b[0m"
+
 void error(int code, char* fmt, ...)
 {
     va_list args;
 
     va_start(args, fmt);
-    fprintf(stderr, "[E]\t ");
+    fprintf(stderr, COLOR_RED "[E]\t ");
     vfprintf(stderr, fmt, args);
     va_end(args);
-    fprintf(stderr, "\nAborting\n");
+    fprintf(stderr, "\nAborting\n" COLOR_RESET);
     exit(code);
 }
 
@@ -23,10 +29,10 @@ void warning(char* format, ...)
     va_list args;
 
     va_start(args, format);
-    fprintf(stderr, "[W]\t ");
+    fprintf(stderr, COLOR_YELLOW "[W]\t ");
     vfprintf(stderr, format, args);
     va_end(args);
-    fprintf(stderr, "\n");
+    fprintf(stderr, "\n" COLOR_RESET);
     fflush(stderr);
 }
 
@@ -35,10 +41,10 @@ void info(char* format, ...)
     va_list args;
 
     va_start(args, format);
-    fprintf(stdout, "[I]\t ");
+    fprintf(stdout, COLOR_BLUE "[I]\t ");
     vfprintf(stdout, format, args);
     va_end(args);
-    fprintf(stdout, "\n");
+    fprintf(stdout, "\n" COLOR_RESET);
     fflush(stdout);
 }
 
@@ -47,10 +53,10 @@ void debug(char* file, int line, char* format, ...)
     va_list args;
 
     va_start(args, format);
-    fprintf(stdout, "[D %s:%d]: ", file, line);
+    fprintf(stdout, COLOR_PURPLE "[D %s:%d]: ", file, line);
     vfprintf(stdout, format, args);
     va_end(args);
-    fprintf(stdout, "\n");
+    fprintf(stdout, "\n" COLOR_RESET);
     fflush(stdout);
 }
 

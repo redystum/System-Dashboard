@@ -75,8 +75,11 @@ char* url_decode(const char* src)
 
 void send_http_response(int client_fd, const char* file_name, const char* file_ext, parser_args_list_t p_args)
 {
+    char file_path[BUFFER_SIZE];
+    snprintf(file_path, BUFFER_SIZE, "static/%s", file_name);
+
     if (strcmp(file_ext, "html") == 0) {
-        char* html_content = html_parse(file_name, p_args);
+        char* html_content = html_parse(file_path, p_args);
         if (!html_content) {
             const char* not_found_response = "HTTP/1.1 404 Not Found\r\n"
                                              "Content-Type: text/plain\r\n"
@@ -100,7 +103,7 @@ void send_http_response(int client_fd, const char* file_name, const char* file_e
 
         free(html_content);
     } else {
-        int file_fd = open(file_name, O_RDONLY);
+        int file_fd = open(file_path, O_RDONLY);
         if (file_fd == -1) {
             const char* not_found_response = "HTTP/1.1 404 Not Found\r\n"
                                              "Content-Type: text/plain\r\n"
@@ -163,6 +166,11 @@ void* handle_client(void* arg)
         buffer[matches[1].rm_eo] = '\0';
         const char* url_encoded_file_name = buffer + matches[1].rm_so;
         char* file_name = url_decode(url_encoded_file_name);
+
+        if (strlen(file_name) == 0) {
+            free(file_name);
+            file_name = strdup("index.html");
+        }
 
         const char* file_ext = get_file_extension(file_name);
         send_http_response(client_fd, file_name, file_ext, p_args);
