@@ -31,6 +31,8 @@ int parse(char* html, parser_args_list_t args)
         }
 
         if (html[i] == '{' && html[i + 1] != '\0' && html[i + 1] == '{') {
+            DEBUG("Found opening {{");
+
             size_t j = 2;
             while (isspace(html[i + j])) {
                 j++;
@@ -41,17 +43,20 @@ int parse(char* html, parser_args_list_t args)
                 slice.len += 1;
                 j++;
             }
-            int k = j;
-            while (isspace(html[i + k - 1])) {
+
+            while (isspace(html[i + j - 1])) {
                 slice.len -= 1;
-                k--;
+                j--;
             }
             char* val = NULL;
             ut_string_slice_original(&slice, &val);
 
-            for (size_t k = 0; k < args.size; k++) {
-                if (strcmp(args.args[k].key, val) == 0) {
-                    char* res = args.args[k].fun_cal();
+            DEBUG("Found key: %s", val);
+
+            for (size_t j = 0; j < args.size; j++) {
+                if (strcmp(args.args[j].key, val) == 0) {
+                    char* res = args.args[j].fun_cal();
+                    DEBUG("Replacing key with value: %s.", res);
                     if (res) {
                         strncpy(html + i, res, strlen(res));
                         i += strlen(res);
@@ -61,13 +66,14 @@ int parse(char* html, parser_args_list_t args)
                 }
             }
 
-            while (html[i] != '\0' && !(html[i] == '}' && html[i + 1] == '}')) {
-                html[i++] = ' ';
+            size_t k = i;
+            while (html[k] != '\0' && !(html[k] == '}' && html[k + 1] == '}')) {
+                k++;
             }
-            html[i++] = ' ';
-            html[i++] = ' ';
+            k += 2; // '}}'
 
-            i += j;
+            memmove(html + i, html + k, strlen(html + k) + 1);
+            
         }
     }
 

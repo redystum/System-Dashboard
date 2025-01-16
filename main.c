@@ -14,10 +14,14 @@
 
 #define DEFAULT_PORT 8080
 
+char* runCommand(char* command);
 char* getRamUsed();
 char* getRamTotal();
 char* getCpuUsed();
-char* runCommand(char* command);
+char* getDiskUsed();
+char* getDiskTotal();
+char* getDiskPercentage();
+char* getTemperature();
 
 int main(int argc, char* argv[])
 {
@@ -39,7 +43,10 @@ int main(int argc, char* argv[])
         { .key = "cpu", .fun_cal = getCpuUsed },
         { .key = "ram_total", .fun_cal = getRamTotal },
         { .key = "ram", .fun_cal = getRamUsed },
-        { .key = NULL, .fun_cal = NULL },
+        { .key = "disk", .fun_cal = getDiskUsed },
+        { .key = "disk_total", .fun_cal = getDiskTotal },
+        { .key = "disk_percentage", .fun_cal = getDiskPercentage },
+        { .key = "temperature", .fun_cal = getTemperature },
     };
 
     parser_args_list_t p_args_list = { .args = p_args, .size = sizeof(p_args) / sizeof(p_args[0]) };
@@ -48,6 +55,33 @@ int main(int argc, char* argv[])
 
     cmdline_parser_free(&args);
     return 0;
+}
+
+char* runCommand(char* command)
+{
+    FILE* fp;
+    char path[1035];
+
+    char* full_command = calloc(strlen(command) + strlen(" | tr -d '\n'") + 1, sizeof(char));
+    if (full_command == NULL) {
+        ERROR(1, "Memory allocation failed\n");
+        exit(1);
+    }
+    sprintf(full_command, "%s | tr -d '\n'", command);
+
+    fp = popen(full_command, "r");
+    if (fp == NULL) {
+        ERROR(1, "Failed to run command\n");
+        exit(1);
+    }
+    fgets(path, sizeof(path) - 1, fp);
+    pclose(fp);
+    char* result = strdup(path);
+    if (result == NULL) {
+        ERROR(1, "Memory allocation failed\n");
+        exit(1);
+    }
+    return result;
 }
 
 char* getRamUsed()
@@ -64,25 +98,31 @@ char* getRamTotal()
 
 char* getCpuUsed()
 {
-    char* command = "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1\"%\"}'";
+    char* command = "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}'";
     return runCommand(command);
 }
 
-char* runCommand(char* command)
+char* getDiskUsed()
 {
-    FILE* fp;
-    char path[1035];
-    fp = popen(command, "r");
-    if (fp == NULL) {
-        ERROR(1, "Failed to run command\n");
-        exit(1);
-    }
-    fgets(path, sizeof(path) - 1, fp);
-    pclose(fp);
-    char* result = strdup(path);
-    if (result == NULL) {
-        ERROR(1, "Memory allocation failed\n");
-        exit(1);
-    }
-    return result;
+    char* command = "df -h | grep /dev/sdc | awk '{print $3}'"; // /dev/mmcblk0p2
+    return runCommand(command);
+}
+
+char* getDiskTotal()
+{
+    char* command = "df -h | grep /dev/sdc | awk '{print $2}'"; // /dev/mmcblk0p2
+    return runCommand(command);
+}
+
+char* getDiskPercentage()
+{
+    char* command = "df -h | grep /dev/sdc | awk '{print $5}'"; // /dev/mmcblk0p2
+    return runCommand(command);
+}
+
+char* getTemperature()
+{
+    // char* command = "vcgencmd measure_temp | awk -F '=' '{print $2}' | awk -F \"'\" '{print $1}'";
+    char* command = "echo 45";
+    return runCommand(command);
 }

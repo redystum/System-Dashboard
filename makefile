@@ -85,6 +85,5 @@ cppcheck:
 	cppcheck --enable=all --verbose *.c *.h
 
 # run make and run
-run:
-	make 
+run: all
 	./$(PROGRAM)

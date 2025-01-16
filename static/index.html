@@ -89,9 +89,9 @@
                                 </div>
 
                                 <h3 class="mt-2 text-2xl sm:text-3xl lg:text-4xl text-neutral-200">
-                                    <span class="font-semibold">16Gb</span> <span
+                                    <span class="font-semibold">{{ disk }}</span> <span
                                         class="text-neutral-500 text-base text-nowrap">/
-                                        64Gb (25%)</span>
+                                        {{ disk_total }} ({{ disk_percentage }})</span>
                                 </h3>
                             </div>
                         </div>
@@ -104,7 +104,7 @@
                                 </div>
 
                                 <h3 class="mt-2 text-2xl sm:text-3xl lg:text-4xl text-neutral-200">
-                                    <span class="font-semibold">45</span> <span
+                                    <span class="font-semibold">{{ temperature }}</span> <span
                                         class="text-gray-500 text-base">ºC</span>
                                 </h3>
                             </div>
