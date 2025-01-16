@@ -8,16 +8,19 @@
 #include <unistd.h>
 
 #include "args.h"
-#include "utils.h"
+#include "html_parser.h"
 #include "server.h"
+#include "utils.h"
 
 #define DEFAULT_PORT 8080
 
-void replace(char *str, char *orig, char *rep);
-bool starts_with(const char *a, const char *b);
-ssize_t find_str(const char *str, const char *substr);
+char* getRamUsed();
+char* getRamTotal();
+char* getCpuUsed();
+char* runCommand(char* command);
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[])
+{
     struct gengetopt_args_info args;
 
     if (cmdline_parser(argc, argv, &args) != 0) {
@@ -31,20 +34,55 @@ int main(int argc, char *argv[]) {
     } else {
         INFO("No port given, using default = %d", DEFAULT_PORT);
     }
-    
-    server_init(port);
 
-    /*
-    char *buffer = NULL;
+    parser_args_t p_args[] = {
+        { .key = "cpu", .fun_cal = getCpuUsed },
+        { .key = "ram_total", .fun_cal = getRamTotal },
+        { .key = "ram", .fun_cal = getRamUsed },
+        { .key = NULL, .fun_cal = NULL },
+    };
 
-    int length = 0;
-    if ((length = ut_read_file(input, &buffer)) == -1) {
-        ERROR(1, "Error reading input file");
-    }
-    printf("Read %d bytes from %s\n", length, input);
-    */
+    parser_args_list_t p_args_list = { .args = p_args, .size = sizeof(p_args) / sizeof(p_args[0]) };
 
+    server_init(port, p_args_list);
 
     cmdline_parser_free(&args);
     return 0;
+}
+
+char* getRamUsed()
+{
+    char* command = "free -m | grep Mem | awk '{print $3}'";
+    return runCommand(command);
+}
+
+char* getRamTotal()
+{
+    char* command = "free -m | grep Mem | awk '{print $2}'";
+    return runCommand(command);
+}
+
+char* getCpuUsed()
+{
+    char* command = "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1\"%\"}'";
+    return runCommand(command);
+}
+
+char* runCommand(char* command)
+{
+    FILE* fp;
+    char path[1035];
+    fp = popen(command, "r");
+    if (fp == NULL) {
+        ERROR(1, "Failed to run command\n");
+        exit(1);
+    }
+    fgets(path, sizeof(path) - 1, fp);
+    pclose(fp);
+    char* result = strdup(path);
+    if (result == NULL) {
+        ERROR(1, "Memory allocation failed\n");
+        exit(1);
+    }
+    return result;
 }

@@ -10,17 +10,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/sendfile.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <sys/sendfile.h>
 
 #include "server.h"
 #include "utils.h"
-#include "html_parser.h"
 
 #define BUFFER_SIZE 8192
+
+typedef struct {
+    parser_args_list_t html_parser_args;
+    int* client_fd;
+} thread_args_t;
 
 const char* get_file_extension(const char* file_name)
 {
@@ -69,18 +73,10 @@ char* url_decode(const char* src)
     return decoded;
 }
 
-void send_http_response(int client_fd, const char* file_name, const char* file_ext)
+void send_http_response(int client_fd, const char* file_name, const char* file_ext, parser_args_list_t p_args)
 {
     if (strcmp(file_ext, "html") == 0) {
-
-        parser_args* args = malloc(sizeof(parser_args) * 2);
-        args[0].key = "cpu";
-        args[0].val = "18.5";
-
-        args[1].key = "ram";
-        args[1].val = "23";
-
-        char* html_content = html_parse(file_name, args);
+        char* html_content = html_parse(file_name, p_args);
         if (!html_content) {
             const char* not_found_response = "HTTP/1.1 404 Not Found\r\n"
                                              "Content-Type: text/plain\r\n"
@@ -144,8 +140,11 @@ void send_http_response(int client_fd, const char* file_name, const char* file_e
 
 void* handle_client(void* arg)
 {
-    int client_fd = *((int*)arg);
-    free(arg);
+    thread_args_t* t_args = (thread_args_t*)arg;
+    int client_fd = *(t_args->client_fd);
+    free(t_args->client_fd);
+    parser_args_list_t p_args = t_args->html_parser_args;
+    free(t_args);
 
     char buffer[BUFFER_SIZE];
     ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
@@ -166,7 +165,7 @@ void* handle_client(void* arg)
         char* file_name = url_decode(url_encoded_file_name);
 
         const char* file_ext = get_file_extension(file_name);
-        send_http_response(client_fd, file_name, file_ext);
+        send_http_response(client_fd, file_name, file_ext, p_args);
 
         free(file_name);
     } else {
@@ -183,7 +182,7 @@ void* handle_client(void* arg)
     return NULL;
 }
 
-int server_init(int port)
+int server_init(int port, parser_args_list_t p_args)
 {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
@@ -231,7 +230,16 @@ int server_init(int port)
         }
 
         pthread_t thread_id;
-        if (pthread_create(&thread_id, NULL, handle_client, client_fd) != 0) {
+        thread_args_t* t_args = malloc(sizeof(thread_args_t));
+        if (!t_args) {
+            WARNING("malloc failed");
+            close(*client_fd);
+            free(client_fd);
+            continue;
+        }
+        t_args->client_fd = client_fd;
+        t_args->html_parser_args = p_args;
+        if (pthread_create(&thread_id, NULL, handle_client, t_args) != 0) {
             WARNING("pthread_create failed");
             close(*client_fd);
             free(client_fd);

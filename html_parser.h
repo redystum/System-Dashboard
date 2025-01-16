@@ -3,10 +3,15 @@
 
 typedef struct {
     char* key;
-    char* val;
-} parser_args;
+    char* (*fun_cal)(void);
+} parser_args_t;
 
-char *html_parse(const char *file_name, parser_args* args);
-int parse(char *html, parser_args* args);
+typedef struct {
+    parser_args_t* args;
+    size_t size;
+} parser_args_list_t;
+
+char* html_parse(const char* file_name, parser_args_list_t args);
+int parse(char* html, parser_args_list_t args);
 
 #endif

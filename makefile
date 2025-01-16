@@ -26,7 +26,7 @@ PROGRAM_OBJS=main.o utils.o server.o html_parser.o $(PROGRAM_OPT).o
 all: $(PROGRAM)
 
 # activate DEBUG, defining the SHOW_DEBUG macro
-debugon: CFLAGS += -D SHOW_DEBUG -g
+debugon: CFLAGS += -D DEBUG_ENABLED -g
 debugon: $(PROGRAM)
 
 # activate optimization (-O...)
@@ -39,7 +39,7 @@ $(PROGRAM): $(PROGRAM_OBJS)
 	$(CC) -o $@ $(PROGRAM_OBJS) $(LIBS) $(LDFLAGS)
 
 ## Dependencies
-main.o: main.c utils.h server.h $(PROGRAM_OPT).h
+main.o: main.c utils.h server.h html_parser.h $(PROGRAM_OPT).h
 $(PROGRAM_OPT).o: $(PROGRAM_OPT).c $(PROGRAM_OPT).h
 
 utils.o: utils.c utils.h

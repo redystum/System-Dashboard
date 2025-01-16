@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 
-#define DEBUG_ENABLED
-
 /*
  * Prints an error message and aborts the program
  *

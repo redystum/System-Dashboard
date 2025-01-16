@@ -1,6 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-int server_init(int port);
+#include "html_parser.h"
+
+int server_init(int port, parser_args_list_t p_args);
 
 #endif
