@@ -32,6 +32,14 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    #ifdef DEBUG_ENABLED
+        WARNING("Debug mode enabled");
+    #endif
+
+    #ifdef RASPBERRYPI
+        INFO("\nRunning on Raspberry Pi\n");
+    #endif
+
     int port = DEFAULT_PORT;
     if (args.port_given == 1) {
         port = args.port_arg;
@@ -104,25 +112,40 @@ char* getCpuUsed()
 
 char* getDiskUsed()
 {
-    char* command = "df -h | grep /dev/sdc | awk '{print $3}'"; // /dev/mmcblk0p2
+    #ifdef RASPBERRYPI
+        char* command = "df -h | grep /dev/mmcblk0p2 | awk '{print $3}'";
+    #else
+        char* command = "df -h | grep /dev/sdc | awk '{print $3}'";
+    #endif
     return runCommand(command);
 }
 
 char* getDiskTotal()
 {
-    char* command = "df -h | grep /dev/sdc | awk '{print $2}'"; // /dev/mmcblk0p2
+    #ifdef RASPBERRYPI
+        char* command = "df -h | grep /dev/mmcblk0p2 | awk '{print $2}'";
+    #else
+        char* command = "df -h | grep /dev/sdc | awk '{print $2}'";
+    #endif
     return runCommand(command);
 }
 
 char* getDiskPercentage()
 {
-    char* command = "df -h | grep /dev/sdc | awk '{print $5}'"; // /dev/mmcblk0p2
+    #ifdef RASPBERRYPI
+        char* command = "df -h | grep /dev/mmcblk0p2 | awk '{print $5}'";
+    #else
+        char* command = "df -h | grep /dev/sdc | awk '{print $5}'";
+    #endif
     return runCommand(command);
 }
 
 char* getTemperature()
 {
-    // char* command = "vcgencmd measure_temp | awk -F '=' '{print $2}' | awk -F \"'\" '{print $1}'";
-    char* command = "echo 45";
+    #ifdef RASPBERRYPI
+        char* command = "vcgencmd measure_temp | awk -F '=' '{print $2}' | awk -F \"'\" '{print $1}'";
+    #else
+        char* command = "echo 45";
+    #endif
     return runCommand(command);
 }

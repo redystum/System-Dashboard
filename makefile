@@ -87,3 +87,7 @@ cppcheck:
 # run make and run
 run: all
 	./$(PROGRAM)
+
+# activate raspberrypi mode (to change the default commands)
+raspberrypi: CFLAGS += -D RASPBERRYPI
+raspberrypi: $(PROGRAM)
