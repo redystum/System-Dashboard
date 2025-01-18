@@ -27,6 +27,7 @@ char* html_parse(const char* file_name, parser_args_list_t args)
 char* parse(char* html, parser_args_list_t args)
 {
     ut_string_slice_t full_html_slice = { .str = html, .len = 0 };
+    size_t last_index = 0;
 
     char* final_html = strdup("");
     if (final_html == NULL) {
@@ -48,10 +49,22 @@ char* parse(char* html, parser_args_list_t args)
             }
 
             ut_string_slice_t slice = { .str = html + i + j, .len = 0 };
-            while (html[i + j] != '\0' && html[i + j + 1] != '\0' && (html[i + j] != '}' && html[i + j + 1] != '}')) {
+            int nested = 0;
+            while (html[i + j] != '\0' && html[i + j + 1] != '\0' && (nested > 0 || (html[i + j] != '}' || html[i + j + 1] != '}'))) {
+                if (html[i + j] == '{' && html[i + j + 1] == '{') {
+                    nested++;
+                } else if (html[i + j] == '}' && html[i + j + 1] == '}') {
+                    if (nested > 0) {
+                        nested--;
+                    } else {
+                        break;
+                    }
+                }
                 slice.len += 1;
                 j++;
             }
+
+            size_t skip = j;
 
             while (isspace(html[i + j - 1])) {
                 slice.len -= 1;
@@ -81,7 +94,7 @@ char* parse(char* html, parser_args_list_t args)
                 char* key = NULL;
                 ut_string_slice_original(&key_slice, &key);
                 if (function_key != NULL && function_key[0] == '#') {
-                    function_key += 1; // Remove '#'
+                    function_key += 1; // '#'
                 }
 
                 DEBUG("Found function key: %s with key: %s", function_key, key);
@@ -91,16 +104,18 @@ char* parse(char* html, parser_args_list_t args)
                     if (strcmp(arg.key, key) == 0) {
                         if (strcmp(function_key, "each") == 0) {
                             DEBUG("Found each key");
-                            char* res = each(val, arg.fun_args);
+                            char* html_val = val + start + key_slice.len;
+                            char* res = each(html_val, arg.fun_args);
                             if (res == NULL) {
                                 WARNING("Failed to parse each key");
                                 break;
                             }
 
                             char* html_before = NULL;
-                            ut_string_slice_original(&full_html_slice, &html_before);
+                            ut_string_slice_t full_html_slice_copy = { .str = full_html_slice.str + last_index, .len = i - last_index };
+                            ut_string_slice_original(&full_html_slice_copy, &html_before);
 
-                            char* temp_html = malloc((strlen(html_before) + strlen(res) + 1) * sizeof(char));
+                            char* temp_html = malloc((strlen(html_before) + strlen(res) + strlen(final_html) + 1) * sizeof(char));
                             if (temp_html == NULL) {
                                 free(final_html);
                                 free(res);
@@ -109,22 +124,25 @@ char* parse(char* html, parser_args_list_t args)
                                 break;
                             }
 
-                            strcpy(temp_html, html_before);
+                            strcpy(temp_html, final_html);
+                            strcat(temp_html, html_before);
                             strcat(temp_html, res);
 
                             free(final_html);
                             final_html = temp_html;
-                            free(val);
-                            val = NULL;
                             free(res);
                             res = NULL;
                             break;
                         }
                     }
                 }
+
+                i += skip + 2; // tag + }}
+                last_index = i;
             } else {
                 DEBUG("Found key: %s", val);
 
+                int not_found = 1;
                 for (size_t j = 0; j < args.size; j++) {
                     parser_args_t arg = args.args[j];
                     if (strcmp(arg.key, val) == 0) {
@@ -136,30 +154,71 @@ char* parse(char* html, parser_args_list_t args)
                         }
                         DEBUG("Replacing key with value: %s.", res);
                         if (res) {
-                            strncpy(html + i, res, strlen(res));
-                            i += strlen(res);
+
+                            char* html_before = NULL;
+                            ut_string_slice_t full_html_slice_copy = { .str = full_html_slice.str + last_index, .len = i - last_index };
+
+                            ut_string_slice_original(&full_html_slice_copy, &html_before);
+
+                            char* temp_html = malloc((strlen(html_before) + strlen(res) + strlen(final_html) + 1) * sizeof(char));
+                            if (temp_html == NULL) {
+                                free(final_html);
+                                free(res);
+                                free(val);
+                                WARNING("Failed to allocate memory");
+                                break;
+                            }
+
+                            strcpy(temp_html, final_html);
+                            strcat(temp_html, html_before);
+                            strcat(temp_html, res);
+
+                            free(final_html);
+                            final_html = temp_html;
+                            free(res);
+                            res = NULL;
                         }
-                        free(val);
+                        not_found = 0;
                         break;
                     }
                 }
 
-                size_t k = i;
-                while (html[k] != '\0' && !(html[k] == '}' && html[k + 1] == '}')) {
-                    k++;
+                if (not_found) {
+                    WARNING("Key '%s' not found", val);
+                } else {
+                    i += skip + 2; // tag + }}
+                    last_index = i;
                 }
-                k += 2; // '}}'
-
-                memmove(html + i, html + k, strlen(html + k) + 1);
             }
+
+            free(val);
+            val = NULL;
         }
 
         full_html_slice.len = i;
     }
 
-    // DEBUG("Final HTML: %s", final_html);
+    if (last_index < strlen(html)) {
+        char* html_after = NULL;
+        ut_string_slice_t full_html_slice_copy = { .str = full_html_slice.str + last_index, .len = strlen(html) - last_index };
+        ut_string_slice_original(&full_html_slice_copy, &html_after);
+
+        char* temp_html = malloc((strlen(html_after) + strlen(final_html) + 1) * sizeof(char));
+        if (temp_html == NULL) {
+            free(final_html);
+            WARNING("Failed to allocate memory");
+            return NULL;
+        }
+
+        strcpy(temp_html, final_html);
+        strcat(temp_html, html_after);
+
+        free(final_html);
+        final_html = temp_html;
+    }
 
     html = strdup(final_html);
+    free(final_html);
     return html;
 }
 

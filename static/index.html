@@ -196,7 +196,7 @@
                                             <td class="size-px whitespace-nowrap">
                                                 <span class="block px-6 py-2">
                                                     <span
-                                                        class="font-mono text-neutral-200 text-base">gisem.service</span>
+                                                        class="font-mono text-neutral-200 text-base">{{ name }}</span>
                                                 </span>
                                             </td>
                                             <td class="size-px whitespace-nowrap">
@@ -224,17 +224,17 @@
                                             </td>
                                             <td class="size-px whitespace-nowrap">
                                                 <span class="block px-6 py-2">
-                                                    <span class="text-sm text-neutral-400">1%</span>
+                                                    <span class="text-sm text-neutral-400">{{ cpu }}%</span>
                                                 </span>
                                             </td>
                                             <td class="size-px whitespace-nowrap">
                                                 <span class="block px-6 py-2">
-                                                    <span class="text-sm text-neutral-400">220mb</span>
+                                                    <span class="text-sm text-neutral-400">{{ ram }}</span>
                                                 </span>
                                             </td>
                                             <td class="size-px whitespace-nowrap">
                                                 <span class="block px-6 py-2">
-                                                    <span class="text-sm text-neutral-400">28 Dec, 12:12</span>
+                                                    <span class="text-sm text-neutral-400">{{ started }}</span>
                                                 </span>
                                             </td>
                                             <td class="size-px whitespace-nowrap">
@@ -281,7 +281,7 @@
                                 </div>
 
                                 <div>
-                                    code... {{ cpu }}
+                                    code... {{ cpu }} {{ notfound }}
                                 </div>
                             </div>
                         </div>
