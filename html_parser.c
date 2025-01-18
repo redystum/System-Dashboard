@@ -6,7 +6,7 @@
 #include "html_parser.h"
 #include "utils.h"
 
-char* each(char* html, void* args);
+char* each(char* html, void* (*fun)(), ut_dynamic_array_t* itens);
 
 char* html_parse(const char* file_name, parser_args_list_t args)
 {
@@ -21,14 +21,15 @@ char* html_parse(const char* file_name, parser_args_list_t args)
     INFO("Read %d bytes from %s", len, file_name);
 
     char* new_html = parse(html, args);
+    free(html);
     return new_html;
 }
 
 char* parse(char* html, parser_args_list_t args)
 {
     ut_string_slice_t full_html_slice = { .str = html, .len = 0 };
-    size_t last_index = 0;
 
+    size_t last_index = 0;
     char* final_html = strdup("");
     if (final_html == NULL) {
         WARNING("Failed to allocate memory for final HTML");
@@ -73,12 +74,14 @@ char* parse(char* html, parser_args_list_t args)
             char* val = NULL;
             ut_string_slice_original(&slice, &val);
 
-            if (val[0] == '#') {
+            char* function_key = NULL;
+            char* key = NULL;
+
+            if (val != NULL && val[0] == '#') {
                 ut_string_slice_t function_key_slice = { .str = val, .len = 0 };
                 while (val[function_key_slice.len] != '\0' && !isspace(val[function_key_slice.len])) {
                     function_key_slice.len += 1;
                 }
-                char* function_key = NULL;
                 ut_string_slice_original(&function_key_slice, &function_key);
 
                 size_t start = function_key_slice.len;
@@ -91,7 +94,6 @@ char* parse(char* html, parser_args_list_t args)
                     key_slice.len += 1;
                 }
 
-                char* key = NULL;
                 ut_string_slice_original(&key_slice, &key);
                 if (function_key != NULL && function_key[0] == '#') {
                     function_key += 1; // '#'
@@ -101,11 +103,11 @@ char* parse(char* html, parser_args_list_t args)
 
                 for (size_t j = 0; j < args.size; j++) {
                     parser_args_t arg = args.args[j];
-                    if (strcmp(arg.key, key) == 0) {
+                    if (arg.key && strcmp(arg.key, key) == 0) {
                         if (strcmp(function_key, "each") == 0) {
                             DEBUG("Found each key");
                             char* html_val = val + start + key_slice.len;
-                            char* res = each(html_val, arg.fun_args);
+                            char* res = each(html_val, arg.fun_cal, (ut_dynamic_array_t*)arg.fun_args);
                             if (res == NULL) {
                                 WARNING("Failed to parse each key");
                                 break;
@@ -137,22 +139,27 @@ char* parse(char* html, parser_args_list_t args)
                     }
                 }
 
+                free(key);
+
                 i += skip + 2; // tag + }}
                 last_index = i;
-            } else {
+            } else if (val != NULL) {
                 DEBUG("Found key: %s", val);
 
                 int not_found = 1;
                 for (size_t j = 0; j < args.size; j++) {
                     parser_args_t arg = args.args[j];
-                    if (strcmp(arg.key, val) == 0) {
+                    if (arg.key && strcmp(arg.key, val) == 0) {
                         char* res = NULL;
-                        if (arg.fun_args != NULL) {
-                            res = arg.fun_cal(arg.fun_args);
+                        if (arg.fun_cal != NULL) {
+                            if (arg.fun_args != NULL) {
+                                res = arg.fun_cal(arg.fun_args);
+                            } else {
+                                res = arg.fun_cal();
+                            }
                         } else {
-                            res = arg.fun_cal();
+                            res = (char*)arg.fun_args;
                         }
-                        DEBUG("Replacing key with value: %s.", res);
                         if (res) {
 
                             char* html_before = NULL;
@@ -175,10 +182,11 @@ char* parse(char* html, parser_args_list_t args)
 
                             free(final_html);
                             final_html = temp_html;
-                            free(res);
-                            res = NULL;
                         }
                         not_found = 0;
+                        if (arg.fun_cal != NULL) {
+                            free(res);
+                        }
                         break;
                     }
                 }
@@ -222,21 +230,54 @@ char* parse(char* html, parser_args_list_t args)
     return html;
 }
 
-char* each(char* html, void* args)
+char* each(char* html, void* (*fun)(), ut_dynamic_array_t* itens)
 {
-    ut_dynamic_array_t* item = (ut_dynamic_array_t*)args;
-
-    size_t final_html_size = strlen(html) * item->len + 1;
-    char* final_html = malloc(final_html_size);
-    if (final_html == NULL) {
-        WARNING("Failed to allocate memory for final HTML");
+    char* result_html = strdup("");
+    if (result_html == NULL) {
+        WARNING("Failed to allocate memory for result HTML");
         return NULL;
     }
-    final_html[0] = '\0';
 
-    for (size_t i = 0; i < item->len; i++) {
-        strcat(final_html, html);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+    parser_args_list_t (*fun_ptr)(void*) = (parser_args_list_t(*)(void*))fun;
+#pragma GCC diagnostic pop
+
+    if (fun_ptr == NULL) {
+        WARNING("Failed to cast function pointer");
+        free(result_html);
+        return NULL;
     }
 
-    return final_html;
+    DEBUG("itens->size: %zu", itens->len);
+
+    for (size_t i = 0; i < itens->len; i++) {
+        void* item = ut_array_get(itens, i);
+        parser_args_list_t item_args = { 0 };
+        item_args = fun_ptr(item);
+
+        char* parsed_html = parse(html, item_args);
+        if (parsed_html == NULL) {
+            WARNING("Failed to parse HTML for item %zu", i);
+            free(result_html);
+            return NULL;
+        }
+
+        char* temp_html = malloc((strlen(result_html) + strlen(parsed_html) + 1) * sizeof(char));
+        if (temp_html == NULL) {
+            free(result_html);
+            free(parsed_html);
+            WARNING("Failed to allocate memory");
+            return NULL;
+        }
+
+        strcpy(temp_html, result_html);
+        strcat(temp_html, parsed_html);
+
+        free(result_html);
+        result_html = temp_html;
+        free(parsed_html);
+    }
+
+    return result_html;
 }

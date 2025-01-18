@@ -102,9 +102,9 @@ void ut_file_by_line_close(ut_file_by_line_t* file_by_line);
  */
 typedef struct {
     void* data;
-    unsigned int len;
+    unsigned int len; // number of elements in the array
     unsigned int cap;
-    size_t size;
+    size_t size; // size of the elements in the array
 } ut_dynamic_array_t;
 
 /*
