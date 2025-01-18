@@ -1,0 +1,4 @@
+network-online.target
+custom-service.service
+# this line is ignored
+network.target

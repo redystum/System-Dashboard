@@ -95,6 +95,89 @@ int ut_read_file(const char* file_name, char** buffer)
     return length;
 }
 
+ut_file_by_line_t* ut_file_by_line_open(const char* file_name)
+{
+    ut_file_by_line_t* file_by_line = malloc(sizeof(ut_file_by_line_t));
+    if (file_by_line == NULL) {
+        return NULL;
+    }
+
+    file_by_line->file = fopen(file_name, "r");
+    if (file_by_line->file == NULL) {
+        free(file_by_line);
+        return NULL;
+    }
+
+    file_by_line->buffer = NULL;
+    file_by_line->buffer_size = 0;
+    file_by_line->buffer_len = 0;
+
+    return file_by_line;
+}
+
+char* ut_file_by_line_next(ut_file_by_line_t* file_by_line)
+{
+    if (file_by_line->file == NULL) {
+        return NULL;
+    }
+
+    if (file_by_line->buffer == NULL || file_by_line->buffer_len == 0) {
+        if (file_by_line->buffer != NULL) {
+            free(file_by_line->buffer);
+            file_by_line->buffer = NULL;
+        }
+
+        ssize_t read = getline(&file_by_line->buffer, &file_by_line->buffer_size, file_by_line->file);
+        if (read == -1) {
+            return NULL;
+        }
+
+        file_by_line->buffer_len = read;
+    }
+
+    while (isspace((unsigned char)file_by_line->buffer[0])) {
+        memmove(file_by_line->buffer, file_by_line->buffer + 1, file_by_line->buffer_len);
+        file_by_line->buffer_len--;
+    }
+
+    if (file_by_line->buffer[0] == '#') {
+        file_by_line->buffer_len = 0;
+        return ut_file_by_line_next(file_by_line);
+    }
+
+    char* line = malloc(file_by_line->buffer_len + 1);
+    if (line == NULL) {
+        return NULL;
+    }
+
+    memcpy(line, file_by_line->buffer, file_by_line->buffer_len);
+    line[file_by_line->buffer_len] = '\0';
+
+    // Remove trailing whitespace characters
+    char* end = line + file_by_line->buffer_len - 1;
+    while (end > line && isspace((unsigned char)*end)) {
+        end--;
+    }
+    *(end + 1) = '\0';
+
+    file_by_line->buffer_len = 0;
+
+    return line;
+}
+
+void ut_file_by_line_close(ut_file_by_line_t* file_by_line)
+{
+    if (file_by_line->file != NULL) {
+        fclose(file_by_line->file);
+    }
+
+    if (file_by_line->buffer != NULL) {
+        free(file_by_line->buffer);
+    }
+
+    free(file_by_line);
+}
+
 void ut_array_init(ut_dynamic_array_t* arr, size_t size)
 {
     arr->size = size;

@@ -55,3 +55,6 @@ dkms.conf
 .fleet
 **/.idea
 .vscode
+
+# personal data
+*.data.txt

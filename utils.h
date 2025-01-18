@@ -63,6 +63,41 @@ void ut_string_slice_original(ut_string_slice_t* str_slice, char** str);
 int ut_read_file(const char* file_name, char** buffer);
 
 /*
+ * Represents a file read line by line
+ */
+typedef struct {
+    FILE* file;
+    char* buffer;
+    size_t buffer_size;
+    size_t buffer_len;
+} ut_file_by_line_t;
+
+/*
+ * Opens a file to read it line by line
+ *
+ * @param file_name the name of the file to open
+ *
+ * @return the file read line by line or NULL if an error occurred
+ */
+ut_file_by_line_t* ut_file_by_line_open(const char* file_name);
+
+/*
+ * Reads the next line of a file
+ *
+ * @param file_by_line the file read line by line
+ *
+ * @return the next line of the file or NULL if the end of the file is reached
+ */
+char* ut_file_by_line_next(ut_file_by_line_t* file_by_line);
+
+/*
+ * Closes a file read line by line
+ *
+ * @param file_by_line the file read line by line
+ */
+void ut_file_by_line_close(ut_file_by_line_t* file_by_line);
+
+/*
  * Represents a dynamic array
  */
 typedef struct {
