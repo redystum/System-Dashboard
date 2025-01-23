@@ -71,5 +71,8 @@ cppcheck:
 run: all
 	./$(PROGRAM)
 
+valgrind: all
+	valgrind --leak-check=full --track-origins=yes ./$(PROGRAM)
+
 raspberrypi: CFLAGS += -D RASPBERRYPI
 raspberrypi: $(PROGRAM)

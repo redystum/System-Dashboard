@@ -178,48 +178,32 @@ void ut_file_by_line_close(ut_file_by_line_t* file_by_line)
     free(file_by_line);
 }
 
-void ut_array_init(ut_dynamic_array_t* arr, size_t size)
-{
-    arr->size = size;
+void ut_array_init(ut_dynamic_array_t* arr, size_t elem_size) {
     arr->len = 0;
-    arr->data = NULL;
-    arr->cap = 0;
+    arr->cap = 1;
+    arr->size = elem_size;
+    arr->data = malloc(arr->cap * elem_size);
 }
 
-void ut_array_push(ut_dynamic_array_t* arr, void* elem)
-{
+void ut_array_push(ut_dynamic_array_t* arr, void* elem) {
     if (arr->len == arr->cap) {
-        if (arr->cap == 0) {
-            arr->cap = 1;
-        } else {
-            arr->cap *= 2;
-        }
-
+        arr->cap *= 2;
         arr->data = realloc(arr->data, arr->cap * arr->size);
-        if (arr->data == NULL) {
-            error(1, "Error reallocating memory for dynamic array");
-        }
     }
-
     memcpy((char*)arr->data + arr->len * arr->size, elem, arr->size);
     arr->len++;
 }
 
-void* ut_array_get(ut_dynamic_array_t* arr, unsigned int index)
-{
-    if (index >= arr->len) {
-        return NULL;
-    }
-
+void* ut_array_get(ut_dynamic_array_t* arr, size_t index) {
+    if (index >= arr->len) return NULL;
     return (char*)arr->data + index * arr->size;
 }
 
-void ut_array_free(ut_dynamic_array_t* arr)
-{
+void ut_array_free(ut_dynamic_array_t* arr) {
     free(arr->data);
-    arr->data = NULL;
     arr->len = 0;
     arr->cap = 0;
+    arr->data = NULL;
 }
 
 void ut_str_cat(char **dest, ...)

@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <stdlib.h>
+#include <stdio.h>
 
 /*
  * Prints an error message and aborts the program
@@ -113,9 +114,9 @@ typedef struct {
  * @param arr the dynamic array to initialize
  * @param size the size of the elements in the array
  */
-void ut_array_init(ut_dynamic_array_t* arr, size_t size);
+void ut_array_init(ut_dynamic_array_t* arr, size_t elem_size);
 void ut_array_push(ut_dynamic_array_t* arr, void* elem);
-void* ut_array_get(ut_dynamic_array_t* arr, unsigned int index);
+void* ut_array_get(ut_dynamic_array_t* arr, size_t index);
 void ut_array_free(ut_dynamic_array_t* arr);
 
 /*
