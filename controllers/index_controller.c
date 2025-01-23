@@ -75,16 +75,16 @@ parser_args_list_t returnService(void* args) {
     p_args[0] = (parser_args_t) { .key = "name", .fun_cal = NULL, .fun_args = name };
 
     #ifdef RASPBERRYPI
-        snprintf(command, sizeof(command), "systemctl status %s | grep 'CPU:' | awk '{print $2}'", service);
+        snprintf(command, sizeof(command), "systemctl status %s | grep 'CPU:' | awk '{print $2}' | head -n 1", service);
     #else
-        snprintf(command, sizeof(command), "echo 0.2"); // Simulated CPU usage
+        snprintf(command, sizeof(command), "echo 2.15s"); // Simulated CPU usage
     #endif
     char* cpu = runCommand(command);
     cpu[strcspn(cpu, "\n")] = '\0';
     p_args[1] = (parser_args_t) { .key = "cpu", .fun_cal = NULL, .fun_args = cpu };
 
     #ifdef RASPBERRYPI
-        snprintf(command, sizeof(command), "systemctl status %s | grep 'Memory:' | awk '{print $2, $3, $4}'", service);
+        snprintf(command, sizeof(command), "systemctl status %s | grep 'Memory:' | awk '{print $2, $3, $4}' | head -n 1", service);
     #else
         snprintf(command, sizeof(command), "echo 160.0K (peak: 1.1M)"); // Simulated RAM usage in KB
     #endif
@@ -93,7 +93,7 @@ parser_args_list_t returnService(void* args) {
     p_args[2] = (parser_args_t) { .key = "ram", .fun_cal = NULL, .fun_args = ram };
 
     #ifdef RASPBERRYPI
-        snprintf(command, sizeof(command), "systemctl status %s | grep 'Active:' | awk '{print $6, $7, $8, $9, $10}'", service);
+        snprintf(command, sizeof(command), "systemctl status %s | grep 'Active:' | awk '{print $6, $7, $8, $9, $10}' | head -n 1", service);
     #else
         snprintf(command, sizeof(command), "echo 2021-01-01 00:00:00"); // Simulated start time
     #endif
