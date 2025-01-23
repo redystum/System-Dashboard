@@ -58,3 +58,4 @@ dkms.conf
 
 # personal data
 *.data.txt
+log.txt

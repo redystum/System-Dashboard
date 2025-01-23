@@ -13,15 +13,6 @@
 
 #define DEFAULT_PORT 8080
 
-char* runCommand(char* command);
-char* getRamUsed();
-char* getRamTotal();
-char* getCpuUsed();
-char* getDiskUsed();
-char* getDiskTotal();
-char* getDiskPercentage();
-char* getTemperature();
-
 int main(int argc, char* argv[])
 {
     struct gengetopt_args_info args;
@@ -30,6 +21,8 @@ int main(int argc, char* argv[])
         ERROR(1, "Error parsing command line");
         return 1;
     }
+
+    file_log_init("log.txt");
 
     #ifdef DEBUG_ENABLED
         WARNING("Debug mode enabled\n");
@@ -47,6 +40,8 @@ int main(int argc, char* argv[])
     }
 
     server_init(port);
+
+    file_log_close();
 
     cmdline_parser_free(&args);
     return 0;

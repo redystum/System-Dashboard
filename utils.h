@@ -35,6 +35,23 @@
 #define DEBUG(...)
 #endif
 
+/*
+ * Initializes the log file
+ *
+ * @param path the path of the log file
+ */
+void file_log_init(const char* path);
+
+/*
+ * Frees the memory related to the log file
+ */
+void file_log_close();
+
+/*
+ * Logs a message to the log file
+ *
+ * @param text the message to log
+ */
 #define EOL '\n'
 
 /*
