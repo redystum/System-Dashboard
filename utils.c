@@ -1,8 +1,8 @@
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "utils.h"
 
@@ -13,7 +13,7 @@
 #define COLOR_RESET "\x1b[0m"
 
 int can_log = 0;
-void file_log(char* tag, char* text, va_list args);
+void _file_log(char* tag, char* text, va_list args);
 
 void error(int code, char* fmt, ...)
 {
@@ -23,7 +23,7 @@ void error(int code, char* fmt, ...)
     va_copy(args_copy, args);
     fprintf(stderr, COLOR_RED "[E]\t ");
     vfprintf(stderr, fmt, args);
-    file_log("[E]\t ", fmt, args_copy);
+    _file_log("[E]\t ", fmt, args_copy);
     va_end(args_copy);
     va_end(args);
     fprintf(stderr, "\nAborting\n" COLOR_RESET);
@@ -38,7 +38,7 @@ void warning(char* format, ...)
     va_copy(args_copy, args);
     fprintf(stderr, COLOR_YELLOW "[W]\t ");
     vfprintf(stderr, format, args);
-    file_log("[W]\t ", format, args_copy);
+    _file_log("[W]\t ", format, args_copy);
     va_end(args_copy);
     va_end(args);
     fprintf(stderr, "\n" COLOR_RESET);
@@ -53,7 +53,7 @@ void info(char* format, ...)
     va_copy(args_copy, args);
     fprintf(stdout, COLOR_BLUE "[I]\t ");
     vfprintf(stdout, format, args);
-    file_log("[I]\t ", format, args_copy);
+    _file_log("[I]\t ", format, args_copy);
     va_end(args_copy);
     va_end(args);
     fprintf(stdout, "\n" COLOR_RESET);
@@ -74,7 +74,7 @@ void debug(char* file, int line, char* format, ...)
 
 char* log_file_path = NULL;
 
-void file_log_init(const char* path)
+void ut_file_log_init(const char* path)
 {
     if (path == NULL) {
         can_log = 0;
@@ -96,7 +96,7 @@ void file_log_init(const char* path)
     can_log = 1;
 }
 
-void file_log(char* tag, char* text, va_list args)
+void _file_log(char* tag, char* text, va_list args)
 {
     if (can_log == 0) {
         return;
@@ -113,11 +113,16 @@ void file_log(char* tag, char* text, va_list args)
     fprintf(file, "%s", tag);
     vfprintf(file, text, args);
     fprintf(file, "\n");
-    
+
     fclose(file);
 }
 
-void file_log_close()
+char* ut_get_file_log_path()
+{
+    return log_file_path;
+}
+
+void ut_file_log_close()
 {
     if (log_file_path != NULL) {
         free(log_file_path);
@@ -317,4 +322,40 @@ void ut_trim(char* str)
     while (*str && isspace(*str)) {
         str++;
     }
+}
+
+void ut_replace_text(char **logs, size_t *len, const char *old_text, const char *new_text) {
+    size_t old_len = strlen(old_text);
+    size_t new_len = strlen(new_text);
+
+    size_t count = 0;
+    for (char *pos = *logs; (pos = strstr(pos, old_text)) != NULL; pos += old_len) {
+        count++;
+    }
+
+    size_t result_len = *len + count * (new_len - old_len);
+    char *result = malloc(result_len + 1); // +1 for null terminator
+
+    if (!result) {
+        error(1, "Failed to allocate memory");
+    }
+
+    char *src = *logs;
+    char *dst = result;
+    while ((src = strstr(src, old_text)) != NULL) {
+        size_t prefix_len = src - *logs;
+        strncpy(dst, *logs, prefix_len);
+        dst += prefix_len;
+
+        strcpy(dst, new_text);
+        dst += new_len;
+
+        src += old_len;
+        *logs = src;
+    }
+
+    strcpy(dst, *logs);
+
+    *logs = result;
+    *len = result_len;
 }

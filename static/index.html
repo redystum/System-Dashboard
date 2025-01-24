@@ -7,11 +7,17 @@
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        ff-consolas {
+            font-family: Consolas, monospace !important;
+        }
+    </style>
 </head>
 
 <body class="bg-neutral-900 text-white">
     <div class="md:flex">
-        <div class="md:w-[260px] w-100 md:h-screen h-fit border-e bg-neutral-800 border-neutral-700">
+        <div class="md:w-[260px] w-100 md:min-h-screen md:h-auto h-fit border-e bg-neutral-800 border-neutral-700">
             <div class="relative flex flex-col h-full max-h-full">
                 <div class="px-6 pt-4 flex items-center">
                     <svg class="w-8 h-8 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -195,8 +201,7 @@
                                         <tr class="bg-neutral-900 hover:bg-neutral-800">
                                             <td class="size-px whitespace-nowrap">
                                                 <span class="block px-6 py-2">
-                                                    <span
-                                                        class="font-mono text-neutral-200 text-base">{{ name }}</span>
+                                                    <span class="font-mono text-neutral-200 text-base">{{ name }}</span>
                                                 </span>
                                             </td>
                                             <td class="size-px whitespace-nowrap">
@@ -280,8 +285,10 @@
                                     </div>
                                 </div>
 
-                                <div>
-                                    code... {{ cpu }} {{ notfound }}
+                                <div class="max-h-[250px] overflow-y-auto">
+                                    <code class="block px-6 py-4 text-sm text-neutral-400 ff-consolas">
+                                        {{ logs }}
+                                    </code>
                                 </div>
                             </div>
                         </div>

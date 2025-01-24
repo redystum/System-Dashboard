@@ -8,6 +8,7 @@
 #include "index_controller.h"
 
 parser_args_list_t returnService(void* args);
+char* returnLogs();
 
 char* index_controller_init(char* file_path)
 {
@@ -41,7 +42,8 @@ char* index_controller_init(char* file_path)
         { .key = "disk_total", .fun_cal = getDiskTotal, .fun_args = NULL },
         { .key = "disk_percentage", .fun_cal = getDiskPercentage, .fun_args = NULL },
         { .key = "temperature", .fun_cal = getTemperature, .fun_args = NULL },
-        { .key = "services", .fun_cal = returnService, .fun_args = &services }
+        { .key = "services", .fun_cal = returnService, .fun_args = &services },
+        { .key = "logs", .fun_cal = returnLogs, .fun_args = NULL }
     };
 #pragma GCC diagnostic pop
 
@@ -58,49 +60,63 @@ char* index_controller_init(char* file_path)
     return html;
 }
 
-parser_args_list_t returnService(void* args) {
+parser_args_list_t returnService(void* args)
+{
     char* service = *(char**)args;
     DEBUG("Service: %s", service);
 
     char command[256];
     parser_args_t* p_args = malloc(4 * sizeof(parser_args_t));
 
-    #ifdef RASPBERRYPI
-        snprintf(command, sizeof(command), "systemctl show -p Description --value %s", service);
-    #else
-        snprintf(command, sizeof(command), "echo %s", service); // Simulated service name
-    #endif
+#ifdef RASPBERRYPI
+    snprintf(command, sizeof(command), "systemctl show -p Description --value %s", service);
+#else
+    snprintf(command, sizeof(command), "echo %s", service); // Simulated service name
+#endif
     char* name = runCommand(command);
     name[strcspn(name, "\n")] = '\0'; // Strip newline
     p_args[0] = (parser_args_t) { .key = "name", .fun_cal = NULL, .fun_args = name };
 
-    #ifdef RASPBERRYPI
-        snprintf(command, sizeof(command), "systemctl status %s | grep 'CPU:' | awk '{print $2}' | head -n 1", service);
-    #else
-        snprintf(command, sizeof(command), "echo 2.15s"); // Simulated CPU usage
-    #endif
+#ifdef RASPBERRYPI
+    snprintf(command, sizeof(command), "systemctl status %s | grep 'CPU:' | awk '{print $2}' | head -n 1", service);
+#else
+    snprintf(command, sizeof(command), "echo 2.15s"); // Simulated CPU usage
+#endif
     char* cpu = runCommand(command);
     cpu[strcspn(cpu, "\n")] = '\0';
     p_args[1] = (parser_args_t) { .key = "cpu", .fun_cal = NULL, .fun_args = cpu };
 
-    #ifdef RASPBERRYPI
-        snprintf(command, sizeof(command), "systemctl status %s | grep 'Memory:' | awk '{print $2, $3, $4}' | head -n 1", service);
-    #else
-        snprintf(command, sizeof(command), "echo 160.0K (peak: 1.1M)"); // Simulated RAM usage in KB
-    #endif
+#ifdef RASPBERRYPI
+    snprintf(command, sizeof(command), "systemctl status %s | grep 'Memory:' | awk '{print $2, $3, $4}' | head -n 1", service);
+#else
+    snprintf(command, sizeof(command), "echo \"160.0K (peak: 1.1M)\""); // Simulated RAM usage in KB
+#endif
     char* ram = runCommand(command);
     ram[strcspn(ram, "\n")] = '\0';
     p_args[2] = (parser_args_t) { .key = "ram", .fun_cal = NULL, .fun_args = ram };
 
-    #ifdef RASPBERRYPI
-        snprintf(command, sizeof(command), "systemctl status %s | grep 'Active:' | awk '{print $6, $7, $8, $9, $10}' | head -n 1", service);
-    #else
-        snprintf(command, sizeof(command), "echo 2021-01-01 00:00:00"); // Simulated start time
-    #endif
+#ifdef RASPBERRYPI
+    snprintf(command, sizeof(command), "systemctl status %s | grep 'Active:' | awk '{print $6, $7, $8, $9, $10}' | head -n 1", service);
+#else
+    snprintf(command, sizeof(command), "echo 2021-01-01 00:00:00"); // Simulated start time
+#endif
     char* started = runCommand(command);
     started[strcspn(started, "\n")] = '\0';
     p_args[3] = (parser_args_t) { .key = "started", .fun_cal = NULL, .fun_args = started };
 
     parser_args_list_t p_args_list = { .args = p_args, .size = 4 };
     return p_args_list;
+}
+
+char* returnLogs()
+{
+    char* logs = NULL;
+
+    size_t len = ut_read_file(ut_get_file_log_path(), &logs);
+
+    INFO("Read %d bytes from %s", len, ut_get_file_log_path());
+
+    ut_replace_text(&logs, &len, "\n", "<br>");
+
+    return logs;
 }

@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    file_log_init("log.txt");
+    ut_file_log_init("log.txt");
 
     #ifdef DEBUG_ENABLED
         WARNING("Debug mode enabled\n");
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 
     server_init(port);
 
-    file_log_close();
+    ut_file_log_close();
 
     cmdline_parser_free(&args);
     return 0;

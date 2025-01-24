@@ -1,8 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /*
  * Prints an error message and aborts the program
@@ -40,12 +40,19 @@
  *
  * @param path the path of the log file
  */
-void file_log_init(const char* path);
+void ut_file_log_init(const char* path);
+
+/*
+ * Returns the path of the log file
+ *
+ * @return the path of the log file
+ */
+char* ut_get_file_log_path();
 
 /*
  * Frees the memory related to the log file
  */
-void file_log_close();
+void ut_file_log_close();
 
 /*
  * Logs a message to the log file
@@ -142,7 +149,7 @@ void ut_array_free(ut_dynamic_array_t* arr);
  * @param dest the destination string
  * @param ... the strings to concatenate
  */
-void ut_str_cat(char **dest, ...);
+void ut_str_cat(char** dest, ...);
 
 /*
  * Trims a string
@@ -150,6 +157,16 @@ void ut_str_cat(char **dest, ...);
  * @param str the string to trim
  */
 void ut_trim(char* str);
+
+/*
+ * Replaces a text in a string
+ *
+ * @param logs the string to replace the text
+ * @param len the length of the string
+ * @param old_text the text to replace
+ * @param new_text the new text
+ */
+void ut_replace_text(char **logs, size_t *len, const char *old_text, const char *new_text);
 
 void error(int code, char* fmt, ...);
 void warning(char* format, ...);

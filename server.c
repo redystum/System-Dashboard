@@ -70,7 +70,7 @@ char* url_decode(const char* src)
     return decoded;
 }
 
-void send_http_response(int client_fd, const char* file_name, const char* file_ext)
+int send_http_response(int client_fd, const char* file_name, const char* file_ext)
 {
     char file_path[BUFFER_SIZE];
     snprintf(file_path, BUFFER_SIZE, "static/%s", file_name);
@@ -80,8 +80,8 @@ void send_http_response(int client_fd, const char* file_name, const char* file_e
 
         if (strcmp(file_name, "index.html") == 0) {
             html_content = index_controller_init(file_path);
-        } 
-        
+        }
+
         if (!html_content) {
             const char* not_found_response = "HTTP/1.1 404 Not Found\r\n"
                                              "Content-Type: text/plain\r\n"
@@ -89,7 +89,7 @@ void send_http_response(int client_fd, const char* file_name, const char* file_e
                                              "\r\n"
                                              "404 Not Found";
             send(client_fd, not_found_response, strlen(not_found_response), 0);
-            return;
+            return 404;
         }
 
         char header[BUFFER_SIZE];
@@ -104,43 +104,46 @@ void send_http_response(int client_fd, const char* file_name, const char* file_e
         send(client_fd, html_content, strlen(html_content), 0);
 
         free(html_content);
-    } else {
-        int file_fd = open(file_path, O_RDONLY);
-        if (file_fd == -1) {
-            const char* not_found_response = "HTTP/1.1 404 Not Found\r\n"
-                                             "Content-Type: text/plain\r\n"
-                                             "Content-Length: 13\r\n"
-                                             "\r\n"
-                                             "404 Not Found";
-            send(client_fd, not_found_response, strlen(not_found_response), 0);
-            return;
-        }
 
-        struct stat file_stat;
-        fstat(file_fd, &file_stat);
-        off_t file_size = file_stat.st_size;
-
-        char header[BUFFER_SIZE];
-        int header_len = snprintf(header, BUFFER_SIZE,
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: %s\r\n"
-            "Content-Length: %ld\r\n"
-            "\r\n",
-            get_mime_type(file_ext), file_size);
-
-        send(client_fd, header, header_len, 0);
-
-        off_t offset = 0;
-        while (offset < file_size) {
-            ssize_t sent = sendfile(client_fd, file_fd, &offset, file_size - offset);
-            if (sent <= 0) {
-                WARNING("sendfile");
-                break;
-            }
-        }
-
-        close(file_fd);
+        return 200;
     }
+
+    int file_fd = open(file_path, O_RDONLY);
+    if (file_fd == -1) {
+        const char* not_found_response = "HTTP/1.1 404 Not Found\r\n"
+                                         "Content-Type: text/plain\r\n"
+                                         "Content-Length: 13\r\n"
+                                         "\r\n"
+                                         "404 Not Found";
+        send(client_fd, not_found_response, strlen(not_found_response), 0);
+        return 404;
+    }
+
+    struct stat file_stat;
+    fstat(file_fd, &file_stat);
+    off_t file_size = file_stat.st_size;
+
+    char header[BUFFER_SIZE];
+    int header_len = snprintf(header, BUFFER_SIZE,
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: %s\r\n"
+        "Content-Length: %ld\r\n"
+        "\r\n",
+        get_mime_type(file_ext), file_size);
+
+    send(client_fd, header, header_len, 0);
+
+    off_t offset = 0;
+    while (offset < file_size) {
+        ssize_t sent = sendfile(client_fd, file_fd, &offset, file_size - offset);
+        if (sent <= 0) {
+            WARNING("sendfile");
+            break;
+        }
+    }
+
+    close(file_fd);
+    return 200;
 }
 
 void* handle_client(void* arg)
@@ -154,6 +157,7 @@ void* handle_client(void* arg)
         return NULL;
     }
 
+    int status;
     buffer[bytes_received] = '\0';
 
     regex_t regex;
@@ -171,7 +175,7 @@ void* handle_client(void* arg)
         }
 
         const char* file_ext = get_file_extension(file_name);
-        send_http_response(client_fd, file_name, file_ext);
+        status = send_http_response(client_fd, file_name, file_ext);
 
         free(file_name);
     } else {
@@ -181,10 +185,13 @@ void* handle_client(void* arg)
                                            "\r\n"
                                            "Bad Request";
         send(client_fd, bad_request_response, strlen(bad_request_response), 0);
+        status = 400;
     }
 
     regfree(&regex);
     close(client_fd);
+
+    INFO("Client disconnected with status %d", status);
     return NULL;
 }
 
