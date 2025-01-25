@@ -66,7 +66,7 @@ parser_args_list_t returnService(void* args)
     DEBUG("Service: %s", service);
 
     char command[256];
-    parser_args_t* p_args = malloc(4 * sizeof(parser_args_t));
+    parser_args_t* p_args = malloc(5 * sizeof(parser_args_t));
 
 #ifdef RASPBERRYPI
     snprintf(command, sizeof(command), "systemctl show -p Description --value %s", service);
@@ -74,7 +74,6 @@ parser_args_list_t returnService(void* args)
     snprintf(command, sizeof(command), "echo %s", service); // Simulated service name
 #endif
     char* name = runCommand(command);
-    name[strcspn(name, "\n")] = '\0'; // Strip newline
     p_args[0] = (parser_args_t) { .key = "name", .fun_cal = NULL, .fun_args = name };
 
 #ifdef RASPBERRYPI
@@ -83,7 +82,6 @@ parser_args_list_t returnService(void* args)
     snprintf(command, sizeof(command), "echo 2.15s"); // Simulated CPU usage
 #endif
     char* cpu = runCommand(command);
-    cpu[strcspn(cpu, "\n")] = '\0';
     p_args[1] = (parser_args_t) { .key = "cpu", .fun_cal = NULL, .fun_args = cpu };
 
 #ifdef RASPBERRYPI
@@ -92,7 +90,6 @@ parser_args_list_t returnService(void* args)
     snprintf(command, sizeof(command), "echo \"160.0K (peak: 1.1M)\""); // Simulated RAM usage in KB
 #endif
     char* ram = runCommand(command);
-    ram[strcspn(ram, "\n")] = '\0';
     p_args[2] = (parser_args_t) { .key = "ram", .fun_cal = NULL, .fun_args = ram };
 
 #ifdef RASPBERRYPI
@@ -101,10 +98,17 @@ parser_args_list_t returnService(void* args)
     snprintf(command, sizeof(command), "echo 2021-01-01 00:00:00"); // Simulated start time
 #endif
     char* started = runCommand(command);
-    started[strcspn(started, "\n")] = '\0';
     p_args[3] = (parser_args_t) { .key = "started", .fun_cal = NULL, .fun_args = started };
 
-    parser_args_list_t p_args_list = { .args = p_args, .size = 4 };
+#ifdef RASPBERRYPI
+    snprintf(command, sizeof(command), "systemctl is-active --quiet %s && echo '1' || echo '0'", service);
+#else
+    snprintf(command, sizeof(command), "echo 1"); // Simulated service status
+#endif
+    char* status = runCommand(command);
+    p_args[4] = (parser_args_t) { .key = "status", .fun_cal = NULL, .fun_args = status };
+
+    parser_args_list_t p_args_list = { .args = p_args, .size = 5 };
     return p_args_list;
 }
 

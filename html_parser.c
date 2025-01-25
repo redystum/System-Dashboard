@@ -136,6 +136,49 @@ char* parse(char* html, parser_args_list_t args)
                             res = NULL;
                             break;
                         }
+
+                        if (strcmp(function_key, "if") == 0 || strcmp(function_key, "ifnot") == 0) {
+                            DEBUG("Found if key");
+                            char* html_val = val + start + key_slice.len;
+                            char* res = NULL;
+                            if (arg.fun_cal != NULL) {
+                                if (arg.fun_args != NULL) {
+                                    res = arg.fun_cal(arg.fun_args);
+                                } else {
+                                    res = arg.fun_cal();
+                                }
+                            } else {
+                                res = (char*)arg.fun_args;
+                            }
+
+                            if (res) {
+                                char* html_before = NULL;
+                                ut_string_slice_t full_html_slice_copy = { .str = full_html_slice.str + last_index, .len = i - last_index };
+                                ut_string_slice_original(&full_html_slice_copy, &html_before);
+
+                                char* temp_html = malloc((strlen(html_before) + strlen(html_val) + strlen(final_html) + 1) * sizeof(char));
+                                if (temp_html == NULL) {
+                                    free(final_html);
+                                    free(res);
+                                    free(val);
+                                    WARNING("Failed to allocate memory");
+                                    break;
+                                }
+
+                                strcpy(temp_html, final_html);
+                                strcat(temp_html, html_before);
+
+                                if ((strcmp(res, "1") == 0 && strcmp(function_key, "if") == 0)
+                                    || (strcmp(res, "0") == 0 && strcmp(function_key, "ifnot") == 0)) {
+                                    strcat(temp_html, html_val);
+                                }
+
+                                free(final_html);
+                                final_html = temp_html;
+                            }
+
+                            break;
+                        }
                     }
                 }
 

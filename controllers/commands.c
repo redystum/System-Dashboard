@@ -28,6 +28,7 @@ char* runCommand(char* command)
         ERROR(1, "Memory allocation failed\n");
         exit(1);
     }
+    free(full_command);
     return result;
 }
 
