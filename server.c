@@ -19,9 +19,9 @@
 #include "server.h"
 #include "utils.h"
 
-#include "controllers/index_controller.h"
-
 #define BUFFER_SIZE 8192
+
+controller_list_t _controllers;
 
 const char* get_file_extension(const char* file_name)
 {
@@ -78,8 +78,12 @@ int send_http_response(int client_fd, const char* file_name, const char* file_ex
     if (strcmp(file_ext, "html") == 0) {
         char* html_content = NULL;
 
-        if (strcmp(file_name, "index.html") == 0) {
-            html_content = index_controller_init(file_path);
+        for (size_t i = 0; i < _controllers.size; i++) {
+            controller_t controller = _controllers.controllers[i];
+            if (strcmp(controller.file, file_name) == 0) {
+                html_content = controller.fun(file_path);
+                break;
+            }
         }
 
         if (!html_content) {
@@ -89,6 +93,7 @@ int send_http_response(int client_fd, const char* file_name, const char* file_ex
                                              "\r\n"
                                              "404 Not Found";
             send(client_fd, not_found_response, strlen(not_found_response), 0);
+            free(html_content);
             return 404;
         }
 
@@ -104,7 +109,6 @@ int send_http_response(int client_fd, const char* file_name, const char* file_ex
         send(client_fd, html_content, strlen(html_content), 0);
 
         free(html_content);
-
         return 200;
     }
 
@@ -191,11 +195,11 @@ void* handle_client(void* arg)
     regfree(&regex);
     close(client_fd);
 
-    INFO("Client disconnected with status %d", status);
+    INFO("Client disconnected with status %d, request: %s", status, buffer);
     return NULL;
 }
 
-int server_init(int port)
+int server_init(int port, controller_list_t controllers)
 {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
@@ -223,6 +227,8 @@ int server_init(int port)
         close(server_fd);
         exit(EXIT_FAILURE);
     }
+
+    _controllers = controllers;
 
     INFO("Server listening on port %d\n", port);
 

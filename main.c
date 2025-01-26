@@ -11,6 +11,8 @@
 #include "server.h"
 #include "utils.h"
 
+#include "controllers/index_controller.h"
+
 #define DEFAULT_PORT 8080
 
 int main(int argc, char* argv[])
@@ -39,7 +41,21 @@ int main(int argc, char* argv[])
         INFO("No port given, using default = %d", DEFAULT_PORT);
     }
 
-    server_init(port);
+    size_t controllers_size = 1;
+
+    controller_t* controllers = malloc(sizeof(controller_t) * controllers_size);
+    if (!controllers) {
+        ERROR(1, "Failed to allocate memory for controllers");
+    }
+
+    controllers[0] = (controller_t) { .file = "index.html", .fun = index_controller_init };
+
+    controller_list_t controllers_list = {
+        .controllers = controllers,
+        .size = controllers_size
+    };
+
+    server_init(port, controllers_list);
 
     ut_file_log_close();
 
