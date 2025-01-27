@@ -85,7 +85,7 @@ parser_args_list_t returnService(void* args)
     p_args[1] = (parser_args_t) { .key = "cpu", .fun_cal = NULL, .fun_args = cpu };
 
 #ifdef RASPBERRYPI
-    snprintf(command, sizeof(command), "systemctl status %s | grep 'Memory:' | awk '{print $2, $3, $4}' | head -n 1", service);
+    snprintf(command, sizeof(command), "{ output=$(systemctl status %s | grep 'Memory:' | awk '{print $2, $3, $4}' | head -n 1); echo \"${output:-0}\"; }", service);
 #else
     snprintf(command, sizeof(command), "echo \"160.0K (peak: 1.1M)\""); // Simulated RAM usage in KB
 #endif
@@ -101,7 +101,7 @@ parser_args_list_t returnService(void* args)
     p_args[3] = (parser_args_t) { .key = "started", .fun_cal = NULL, .fun_args = started };
 
 #ifdef RASPBERRYPI
-    snprintf(command, sizeof(command), "systemctl is-active --quiet %s && echo '1' || echo '0'", service);
+    snprintf(command, sizeof(command), "systemctl is-active --quiet %s && echo -n '1' || echo -n '0'", service);
 #else
     snprintf(command, sizeof(command), "echo 1"); // Simulated service status
 #endif
