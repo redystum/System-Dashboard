@@ -127,150 +127,151 @@
                             <div class="border rounded-xl shadow-sm overflow-hidden bg-neutral-900 border-neutral-700">
 
                                 <div
-                                    class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
+                                    class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-neutral-700">
                                     <div>
-                                        <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">
+                                        <h2 class="text-xl font-semibold text-neutral-200">
                                             Services
                                         </h2>
                                     </div>
 
                                     <div>
                                         <div class="inline-flex gap-x-2">
-                                            <a class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
-                                                href="#">
+                                            <button class="py-1 px-2 inline-flex justify-center outline-none items-center gap-2 rounded-lg border font-medium shadow-sm align-middle transition-all text-sm bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white focus:ring-offset-gray-800"
+                                                id="showAllServices">
                                                 View all
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-
-                                <table class="w-full divide-y divide-neutral-700">
-                                    <thead class="bg-neutral-900">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3 text-start">
-                                                <div class="flex items-center gap-x-2">
-                                                    <span
-                                                        class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
-                                                        Services
-                                                    </span>
-                                                </div>
-                                            </th>
-
-                                            <th scope="col" class="px-6 py-3 text-start">
-                                                <div class="flex items-center gap-x-2">
-                                                    <span
-                                                        class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
-                                                        Status
-                                                    </span>
-                                                </div>
-                                            </th>
-
-                                            <th scope="col" class="px-6 py-3 text-start">
-                                                <div class="flex items-center gap-x-2">
-                                                    <span
-                                                        class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
-                                                        CPU
-                                                    </span>
-                                                </div>
-                                            </th>
-
-                                            <th scope="col" class="px-6 py-3 text-start">
-                                                <div class="flex items-center gap-x-2">
-                                                    <span
-                                                        class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
-                                                        RAM
-                                                    </span>
-                                                </div>
-                                            </th>
-
-                                            <th scope="col" class="px-6 py-3 text-start">
-                                                <div class="flex items-center gap-x-2">
-                                                    <span
-                                                        class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
-                                                        Started at
-                                                    </span>
-                                                </div>
-                                            </th>
-
-                                            <th scope="col" class="px-6 py-3 text-end"></th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody class="divide-y divide-neutral-700">
-                                        {{ #each services
-                                        <tr class="bg-neutral-900 hover:bg-neutral-800">
-                                            <td class="size-px whitespace-nowrap">
-                                                <span class="block px-6 py-2">
-                                                    <span class="font-mono text-neutral-200 text-base">{{ name }}</span>
-                                                </span>
-                                            </td>
-                                            <td class="size-px whitespace-nowrap">
-                                                {{ #if status
-                                                <span class="block px-6 py-2">
-                                                    <span
-                                                        class="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs font-medium rounded-full bg-teal-500/10 text-teal-500">
-                                                        <svg class="size-2.5" xmlns="http://www.w3.org/2000/svg"
-                                                            width="16" height="16" fill="currentColor"
-                                                            viewBox="0 0 16 16">
-                                                            <path
-                                                                d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
-                                                        </svg>
-                                                        Active
-                                                    </span>
-                                                </span>
-                                                }}
-                                                {{ #ifnot status
-                                                <span class="block px-6 py-2">
-                                                    <span
-                                                        class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-red-900 text-red-300">
-                                                        <svg class="size-2.5" xmlns="http://www.w3.org/2000/svg"
-                                                            width="16" height="16" fill="currentColor"
-                                                            viewBox="0 0 16 16">
-                                                            <path
-                                                                d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z" />
-                                                        </svg>
-                                                        Inactive
-                                                    </span>
-                                                </span>
-                                                }}
-                                            </td>
-                                            <td class="size-px whitespace-nowrap">
-                                                <span class="block px-6 py-2">
-                                                    <span class="text-sm text-neutral-400">{{ cpu }}</span>
-                                                </span>
-                                            </td>
-                                            <td class="size-px whitespace-nowrap">
-                                                <span class="block px-6 py-2">
-                                                    <span class="text-sm text-neutral-400">{{ ram }}</span>
-                                                </span>
-                                            </td>
-                                            <td class="size-px whitespace-nowrap">
-                                                <span class="block px-6 py-2">
-                                                    <span class="text-sm text-neutral-400">{{ started }}</span>
-                                                </span>
-                                            </td>
-                                            <td class="size-px whitespace-nowrap">
-                                                <button type="button" class="block">
-                                                    <span class="px-6 py-1.5">
+                                <div class="overflow-x-auto w-full">
+                                    <table class="w-full divide-y divide-neutral-700">
+                                        <thead class="bg-neutral-900">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3 text-start">
+                                                    <div class="flex items-center gap-x-2">
                                                         <span
-                                                            class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium shadow-sm align-middle focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition-all text-sm bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white focus:ring-offset-gray-800">
-                                                            <svg class="shrink-0 size-4"
-                                                                xmlns="http://www.w3.org/2000/svg" width="16"
-                                                                height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                            class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
+                                                            Service
+                                                        </span>
+                                                    </div>
+                                                </th>
+
+                                                <th scope="col" class="px-6 py-3 text-start">
+                                                    <div class="flex items-center gap-x-2">
+                                                        <span
+                                                            class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
+                                                            Status
+                                                        </span>
+                                                    </div>
+                                                </th>
+
+                                                <th scope="col" class="px-6 py-3 text-start">
+                                                    <div class="flex items-center gap-x-2">
+                                                        <span
+                                                            class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
+                                                            CPU
+                                                        </span>
+                                                    </div>
+                                                </th>
+
+                                                <th scope="col" class="px-6 py-3 text-start">
+                                                    <div class="flex items-center gap-x-2">
+                                                        <span
+                                                            class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
+                                                            RAM
+                                                        </span>
+                                                    </div>
+                                                </th>
+
+                                                <th scope="col" class="px-6 py-3 text-start">
+                                                    <div class="flex items-center gap-x-2">
+                                                        <span
+                                                            class="text-xs font-semibold uppercase tracking-wide text-neutral-200">
+                                                            Started at
+                                                        </span>
+                                                    </div>
+                                                </th>
+
+                                                <th scope="col" class="px-6 py-3 text-end"></th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody class="divide-y divide-neutral-700">
+                                            {{ #each services
+                                            <tr class="bg-neutral-900 hover:bg-neutral-800">
+                                                <td class="size-px whitespace-nowrap">
+                                                    <span class="block px-6 py-2">
+                                                        <span class="font-mono text-neutral-200 text-base">{{ name }}</span>
+                                                    </span>
+                                                </td>
+                                                <td class="size-px whitespace-nowrap">
+                                                    {{ #if status
+                                                    <span class="block px-6 py-2">
+                                                        <span
+                                                            class="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs font-medium rounded-full bg-teal-500/10 text-teal-500">
+                                                            <svg class="size-2.5" xmlns="http://www.w3.org/2000/svg"
+                                                                width="16" height="16" fill="currentColor"
+                                                                viewBox="0 0 16 16">
                                                                 <path
-                                                                    d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27zm.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0l-.509-.51z" />
-                                                                <path
-                                                                    d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z" />
+                                                                    d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
                                                             </svg>
-                                                            View
+                                                            Active
                                                         </span>
                                                     </span>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        }}
-                                    </tbody>
-                                </table>
+                                                    }}
+                                                    {{ #ifnot status
+                                                    <span class="block px-6 py-2">
+                                                        <span
+                                                            class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-red-900 text-red-300">
+                                                            <svg class="size-2.5" xmlns="http://www.w3.org/2000/svg"
+                                                                width="16" height="16" fill="currentColor"
+                                                                viewBox="0 0 16 16">
+                                                                <path
+                                                                    d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z" />
+                                                            </svg>
+                                                            Inactive
+                                                        </span>
+                                                    </span>
+                                                    }}
+                                                </td>
+                                                <td class="size-px whitespace-nowrap">
+                                                    <span class="block px-6 py-2">
+                                                        <span class="text-sm text-neutral-400">{{ cpu }}</span>
+                                                    </span>
+                                                </td>
+                                                <td class="size-px whitespace-nowrap">
+                                                    <span class="block px-6 py-2">
+                                                        <span class="text-sm text-neutral-400">{{ ram }}</span>
+                                                    </span>
+                                                </td>
+                                                <td class="size-px whitespace-nowrap">
+                                                    <span class="block px-6 py-2">
+                                                        <span class="text-sm text-neutral-400">{{ started }}</span>
+                                                    </span>
+                                                </td>
+                                                <td class="size-px whitespace-nowrap">
+                                                    <button type="button" class="block">
+                                                        <span class="px-6 py-1.5">
+                                                            <span
+                                                                class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium shadow-sm align-middle focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition-all text-sm bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white focus:ring-offset-gray-800">
+                                                                <svg class="shrink-0 size-4"
+                                                                    xmlns="http://www.w3.org/2000/svg" width="16"
+                                                                    height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                                    <path
+                                                                        d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27zm.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0l-.509-.51z" />
+                                                                    <path
+                                                                        d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z" />
+                                                                </svg>
+                                                                View
+                                                            </span>
+                                                        </span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            }}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -284,9 +285,9 @@
                             <div class="border rounded-xl shadow-sm overflow-hidden bg-neutral-900 border-neutral-700">
 
                                 <div
-                                    class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
+                                    class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-neutral-700">
                                     <div>
-                                        <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">
+                                        <h2 class="text-xl font-semibold text-neutral-200">
                                             Logs
                                         </h2>
                                     </div>
@@ -304,6 +305,38 @@
             </div>
         </main>
     </div>
+
+    <div class="size-full fixed top-0 start-0 z-[80] flex overflow-x-hidden overflow-y-auto bg-neutral-800 bg-opacity-50"
+        role="dialog" tabindex="-1" id="allServicesModal" style="display: none;">
+        <div class="m-auto ease-out transition-all sm:max-w-4xl sm:w-full m-3" style="opacity: 0;">
+            <div class="relative grid shadow-lg rounded-xl bg-neutral-900">
+                <div class="flex items-center justify-end px-4 py-3">
+                    <button type="button" id="allServicesClose"
+                        class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none bg-neutral-800 hover:bg-neutral-700 text-neutral-400 focus:bg-neutral-700"
+                        aria-label="Close">
+                        <span class="sr-only">Close</span>
+                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18" />
+                            <path d="m6 6 12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="allServicesTable" class="mx-4 sm:mx-6 mb-4 sm:mb-6 overflow-y-auto max-h-[80vh]" style="display: none;">
+                    <!-- Table from js -->
+                </div>
+
+                <div id="allServicesLoading" class="h-80 flex items-center justify-center w-screen sm:w-auto">
+                    <svg class="mr-3 -ml-1 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="--darkreader-inline-stroke: currentColor;" data-darkreader-inline-stroke=""></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style="--darkreader-inline-fill: currentColor;" data-darkreader-inline-fill=""></path></svg>
+                    <span class="text-lg font-semibold text-white">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
 
 </body>
 

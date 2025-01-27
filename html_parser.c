@@ -286,18 +286,16 @@ char* each(char* html, void* (*fun)(), ut_dynamic_array_t* itens)
     parser_args_list_t (*fun_ptr)(void*) = (parser_args_list_t(*)(void*))fun;
 #pragma GCC diagnostic pop
 
-    if (fun_ptr == NULL) {
-        WARNING("Failed to cast function pointer");
-        free(result_html);
-        return NULL;
-    }
-
     DEBUG("itens->size: %zu", itens->len);
 
     for (size_t i = 0; i < itens->len; i++) {
         void* item = ut_array_get(itens, i);
         parser_args_list_t item_args = { 0 };
-        item_args = fun_ptr(item);
+        if (fun_ptr != NULL) {
+            item_args = fun_ptr(item);
+        } else {
+            item_args = *(parser_args_list_t*)item;
+        }
 
         char* parsed_html = parse(html, item_args);
         if (parsed_html == NULL) {

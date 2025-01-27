@@ -44,6 +44,8 @@ const char* get_mime_type(const char* file_ext)
         return "image/png";
     } else if (strcmp(file_ext, "css") == 0) {
         return "text/css";
+    } else if (strcmp(file_ext, "js") == 0) {
+        return "application/javascript";
     } else {
         return "application/octet-stream";
     }
