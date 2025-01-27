@@ -2,6 +2,7 @@
 #define COMMANDS_H
 
 char* runCommand(char* command);
+char* runCommandNoNewLine(char* command);
 char* getRamUsed();
 char* getRamTotal();
 char* getCpuUsed();

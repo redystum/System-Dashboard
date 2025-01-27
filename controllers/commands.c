@@ -4,32 +4,67 @@
 
 #include "../utils.h"
 
-char* runCommand(char* command)
+char* _runCommand(const char* command, int remove_new_line)
 {
     FILE* fp;
-    char path[1035];
+    size_t buffer_size = 1024;
+    size_t total_size = 0;
+    char* result = NULL;
 
-    char* full_command = calloc(strlen(command) + strlen(" | tr -d '\n'") + 1, sizeof(char));
+    char* full_command = calloc(strlen(command) + strlen(" | tr -d '\\n'") + 1, sizeof(char));
     if (full_command == NULL) {
-        ERROR(1, "Memory allocation failed\n");
+        fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
-    sprintf(full_command, "%s | tr -d '\n'", command);
+
+    sprintf(full_command, "%s | tr -d '\\n'", command);
 
     fp = popen(full_command, "r");
     if (fp == NULL) {
-        ERROR(1, "Failed to run command\n");
+        fprintf(stderr, "Failed to run command\n");
         exit(1);
     }
-    fgets(path, sizeof(path) - 1, fp);
-    pclose(fp);
-    char* result = strdup(path);
+
+    result = malloc(buffer_size);
     if (result == NULL) {
-        ERROR(1, "Memory allocation failed\n");
+        fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
+
+    size_t bytes_read;
+    char buffer[1024];
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+        if (total_size + bytes_read >= buffer_size) {
+            buffer_size *= 2;
+            char* temp = realloc(result, buffer_size);
+            if (temp == NULL) {
+                fprintf(stderr, "Memory allocation failed\n");
+                free(result);
+                exit(1);
+            }
+            result = temp;
+        }
+        memcpy(result + total_size, buffer, bytes_read);
+        total_size += bytes_read;
+    }
+
+    result[total_size] = '\0';
+
+    pclose(fp);
+
     free(full_command);
+
     return result;
+}
+
+char* runCommand(const char* command)
+{
+    return _runCommand(command, 1);
+}
+
+char* runCommandNoNewLine(const char* command)
+{
+    return _runCommand(command, 0);
 }
 
 char* getRamUsed()

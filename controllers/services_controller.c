@@ -12,7 +12,7 @@ char* services_controller_init(char* file_path)
 
     char* services = NULL;
 #ifdef RASPBERRYPI
-    services = runCommand("systemctl list-units --type=service --no-legend --no-pager --output=json | jq -r '.[] | \"\\(.unit)|\\(.sub)|\\(.description)\"'");
+    services = runCommandNoNewLine("systemctl list-units --type=service --no-legend --no-pager --output=json | jq -r '.[] | \"\\(.unit)|\\(.sub)|\\(.description)\"'");
 #else
     services = strdup("sysdash.service|running|System Dashboard\nsysdash.service|exited|System Dashboard\nsysdash.service|running|System Dashboard");
 #endif
@@ -46,6 +46,8 @@ char* services_controller_init(char* file_path)
         parser_args_t* p_args = malloc(3 * sizeof(parser_args_t));
         if (p_args == NULL) {
             WARNING("Failed to allocate memory for parser_args_t");
+            ut_array_free(&services_array);
+            free(services);
             return NULL;
         }
 
@@ -78,6 +80,14 @@ char* services_controller_init(char* file_path)
     parser_args_t* p_args = malloc(1 * sizeof(parser_args_t));
     if (p_args == NULL) {
         WARNING("Failed to allocate memory for parser_args_t");
+        for (size_t i = 0; i < services_array.len; i++) {
+            parser_args_list_t* p_args_list = ut_array_get(&services_array, i);
+            for (size_t j = 0; j < p_args_list->size; j++) {
+                free(p_args_list->args[j].fun_args);
+            }
+            free(p_args_list->args);
+        }
+        ut_array_free(&services_array);
         return NULL;
     }
 
@@ -87,10 +97,15 @@ char* services_controller_init(char* file_path)
     char* html = html_parse(file_path, p_args_list);
 
     for (size_t i = 0; i < services_array.len; i++) {
-        free(*(parser_args_t**)ut_array_get(&services_array, i));
+        parser_args_list_t* p_args_list = ut_array_get(&services_array, i);
+        for (size_t j = 0; j < p_args_list->size; j++) {
+            free(p_args_list->args[j].fun_args);
+        }
+        free(p_args_list->args);
     }
 
     ut_array_free(&services_array);
+    free(p_args);
 
     return html;
 }
