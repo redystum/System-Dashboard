@@ -11,13 +11,21 @@ char* _runCommand(const char* command, int remove_new_line)
     size_t total_size = 0;
     char* result = NULL;
 
-    char* full_command = calloc(strlen(command) + strlen(" | tr -d '\\n'") + 1, sizeof(char));
-    if (full_command == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
+    char* full_command;
+    if (remove_new_line) {
+        full_command = calloc(strlen(command) + strlen(" | tr -d '\\n'") + 1, sizeof(char));
+        if (full_command == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(1);
+        }
+        sprintf(full_command, "%s | tr -d '\\n'", command);
+    } else {
+        full_command = strdup(command);
+        if (full_command == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(1);
+        }
     }
-
-    sprintf(full_command, "%s | tr -d '\\n'", command);
 
     fp = popen(full_command, "r");
     if (fp == NULL) {
