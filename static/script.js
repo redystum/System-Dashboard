@@ -42,7 +42,11 @@ function addRelevantService(service) {
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 && xhr.status == 200) {
-            console.log(xhr.responseText);
+            if (xhr.responseText == "OK") {
+                document.getElementById("success"+service).style.display = "contents";
+            }
+        } else if (xhr.readyState == 4 && xhr.status != 200) {
+            document.getElementById("error"+service).style.display = "contents";
         }
     };
     xhr.send(service);

@@ -209,7 +209,7 @@ char* ut_file_by_line_next(ut_file_by_line_t* file_by_line)
         file_by_line->buffer_len--;
     }
 
-    if (file_by_line->buffer[0] == '#') {
+    if (file_by_line->buffer[0] == '#' || file_by_line->buffer_len == 0) {
         file_by_line->buffer_len = 0;
         return ut_file_by_line_next(file_by_line);
     }
@@ -228,6 +228,12 @@ char* ut_file_by_line_next(ut_file_by_line_t* file_by_line)
         end--;
     }
     *(end + 1) = '\0';
+
+    // Skip empty lines
+    if (strlen(line) == 0) {
+        free(line);
+        return ut_file_by_line_next(file_by_line);
+    }
 
     file_by_line->buffer_len = 0;
 

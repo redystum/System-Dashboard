@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
         INFO("No port given, using default = %d", DEFAULT_PORT);
     }
 
-    size_t controllers_size = 2;
+    size_t controllers_size = 3;
 
     controller_t* controllers = malloc(sizeof(controller_t) * controllers_size);
     if (!controllers) {
@@ -51,6 +51,7 @@ int main(int argc, char* argv[])
 
     controllers[0] = (controller_t) { .file = "index.html", .fun = index_controller_init };
     controllers[1] = (controller_t) { .file = "services.html", .fun = services_controller_init };
+    controllers[2] = (controller_t) { .file = "addRelevantService", .fun = add_to_relevant_server_list };
 
     controller_list_t controllers_list = {
         .controllers = controllers,

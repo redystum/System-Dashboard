@@ -109,3 +109,55 @@ char* services_controller_init(char* file_path)
 
     return html;
 }
+
+char* add_to_relevant_server_list(char* service_name)
+{
+    ut_file_by_line_t* services_file = NULL;
+
+    if ((services_file = ut_file_by_line_open("data/services.data.txt")) == NULL) {
+        WARNING("Failed to read file %s: Not found ", "data/services.data.txt");
+        INFO("Creating file %s", "data/services.data.txt");
+
+        FILE* file = fopen("data/services.data.txt", "w");
+        if (file == NULL) {
+            WARNING("Failed to create file %s", "data/services.data.txt");
+            return strdup("ERROR");
+        }
+        fclose(file);
+    } else {
+        INFO("Read %d bytes from %s", services_file->buffer_size, "data/services.data.txt");
+
+        char* line;
+        while ((line = ut_file_by_line_next(services_file)) != NULL) {
+            if (line == NULL) {
+                WARNING("Failed to read line from file");
+                ut_file_by_line_close(services_file);
+                return strdup("ERROR");
+            }
+
+            ut_trim(line);
+
+            if (strcmp(line, service_name) == 0) {
+                ut_file_by_line_close(services_file);
+                DEBUG("Service %s already in list", service_name);
+                return strdup("OK");
+            }
+        }
+
+        ut_file_by_line_close(services_file);
+    }
+
+    FILE* file = fopen("data/services.data.txt", "a");
+    if (file == NULL) {
+        WARNING("Failed to open file %s", "data/services.data.txt");
+        return strdup("ERROR");
+    }
+
+    fprintf(file, "\n%s", service_name);
+
+    DEBUG("Service %s added to list", service_name);
+
+    fclose(file);
+
+    return strdup("OK");
+}

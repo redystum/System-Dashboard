@@ -216,8 +216,26 @@ int send_post_response(int client_fd, const char* file_name, char* buffer, ssize
 
     DEBUG("POST body: %s", body);
 
-    // TODO CALL CONTROLLERS
-    char* response_body = strdup("POST response");
+    char* response_body = NULL;
+
+    for (size_t i = 0; i < _controllers.size; i++) {
+        controller_t controller = _controllers.controllers[i];
+        if (strcmp(controller.file, file_name) == 0) {
+            response_body = controller.fun(body);
+            break;
+        }
+    }
+
+    if (!response_body) {
+        free(response_body);
+        return send404(client_fd);
+    }
+
+    if (strcmp(response_body, "ERROR") == 0)
+    {
+        free(response_body);
+        return send500(client_fd);
+    }
 
     send200(client_fd, "text/plain", response_body, strlen(response_body));
 
@@ -268,7 +286,7 @@ void* handle_client(void* arg)
 
         free(file_name);
     } else {
-        status = send400(client_fd);;
+        status = send400(client_fd);
     }
 
     char* first_line_end = strstr(buffer, "\r\n");
