@@ -18,7 +18,7 @@ char* index_controller_init(char* file_path)
     ut_array_init(&services, sizeof(char*));
 
     if ((services_file = ut_file_by_line_open("data/services.data.txt")) == NULL) {
-        WARNING("Failed to read file %s (look at the example and create a new one)", "data/services.data.txt");
+        WARNING("Failed to read file %s: Not found ", "data/services.data.txt");
         INFO("Continuing without services data");
     } else {
         INFO("Read %d bytes from %s", services_file->buffer_size, "data/services.data.txt");

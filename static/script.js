@@ -35,3 +35,15 @@ allServicesModal.addEventListener("click", function(e) {
         allServicesLoading.style.display = "none";
     }
 });
+
+function addRelevantService(service) {
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "/addRelevantService", true);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            console.log(xhr.responseText);
+        }
+    };
+    xhr.send(service);
+}
