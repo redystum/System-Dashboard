@@ -161,3 +161,60 @@ char* add_to_relevant_server_list(char* service_name)
 
     return strdup("OK");
 }
+
+char* get_service(char* file_path, get_params_t* params, size_t get_params_size)
+{
+    if (get_params_size == 0) {
+        WARNING("No parameters given");
+        return NULL;
+    }
+
+    char* service_name = NULL;
+    for (size_t i = 0; i < get_params_size; i++) {
+        if (strcmp(params[i].key, "id") == 0) {
+            service_name = params[i].val;
+            break;
+        }
+    }
+
+    if (service_name == NULL) {
+        WARNING("No service parameter given");
+        return NULL;
+    }
+
+    DEBUG("Service: %s", service_name);
+
+#ifdef RASPBERRYPI
+    char* command = "systemctl status %s --no-page";
+    char* command_with_service = malloc(strlen(command) + strlen(service_name) + 1);
+    if (command_with_service == NULL) {
+        WARNING("Failed to allocate memory for command_with_service");
+        return NULL;
+    }
+    sprintf(command_with_service, command, service_name);
+#else
+    char* command_with_service = strdup("echo WSL is making things difficult...");
+#endif
+
+    char* service = runCommandNoNewLine(command_with_service);
+    if (service == NULL) {
+        WARNING("Failed to get service %s", service_name);
+        return NULL;
+    }
+
+    size_t service_len = strlen(service);
+    ut_replace_text(&service, &service_len, "\n", "<br>");
+
+    parser_args_t p_args[] = {
+        { .key = "service", .fun_cal = NULL, .fun_args = service }
+    };
+
+    parser_args_list_t p_args_list = { .args = p_args, .size = 1 };
+
+    char* html = html_parse(file_path, p_args_list);
+
+    free(command_with_service);
+    free(service);
+
+    return html;
+}

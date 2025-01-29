@@ -5,13 +5,18 @@
 
 typedef struct {
     char* file;
-    char* (*fun)(char* file_path);
+    char* (*fun)(char* file_path, ...);
 } controller_t;
 
 typedef struct {
     controller_t* controllers;
     size_t size;
 } controller_list_t;
+
+typedef struct{
+    char* key;
+    char* val;
+} get_params_t;
 
 int server_init(int port, controller_list_t controllers);
 

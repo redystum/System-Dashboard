@@ -1,38 +1,39 @@
-let allServicesModal = document.getElementById("allServicesModal");
-let allServicesTable = document.getElementById("allServicesTable");
-let allServicesLoading = document.getElementById("allServicesLoading");
-let allServicesClose = document.getElementById("allServicesClose");
+let servicesModal = document.getElementById("servicesModal");
+let servicesModalBody = document.getElementById("servicesModalBody");
+let servicesModalLoading = document.getElementById("servicesModalLoading");
+let servicesModalClose = document.getElementById("servicesModalClose");
 
 document.getElementById("showAllServices").addEventListener("click", function() {
 
-    allServicesModal.style.display = "flex";
-    allServicesModal.children[0].style.opacity = 1;
-    allServicesLoading.style.display = "flex";
+    servicesModalLoading.style.display = "flex";
+    servicesModalBody.style.display = "none";
+    servicesModal.style.display = "flex";
+    servicesModal.children[0].style.opacity = 1;
   
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "/services.html", true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 && xhr.status == 200) {
-            allServicesTable.innerHTML = xhr.responseText;
-            allServicesTable.style.display = "block";
-            allServicesLoading.style.display = "none";
+            servicesModalBody.innerHTML = xhr.responseText;
+            servicesModalBody.style.display = "block";
+            servicesModalLoading.style.display = "none";
         }
     };
     xhr.send();
     
 });
 
-allServicesClose.addEventListener("click", function() {
-    allServicesModal.style.display = "none";
-    allServicesTable.style.display = "none";
-    allServicesLoading.style.display = "none";
+servicesModalClose.addEventListener("click", function() {
+    servicesModal.style.display = "none";
+    servicesModalBody.style.display = "none";
+    servicesModalLoading.style.display = "none";
 });
 
-allServicesModal.addEventListener("click", function(e) {
-    if (e.target == allServicesModal) {
-        allServicesModal.style.display = "none";
-        allServicesTable.style.display = "none";
-        allServicesLoading.style.display = "none";
+servicesModal.addEventListener("click", function(e) {
+    if (e.target == servicesModal) {
+        servicesModal.style.display = "none";
+        servicesModalBody.style.display = "none";
+        servicesModalLoading.style.display = "none";
     }
 });
 
@@ -43,11 +44,30 @@ function addRelevantService(service) {
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             if (xhr.responseText == "OK") {
-                document.getElementById("success"+service).style.display = "contents";
+                document.getElementById("btn"+service).style.display = "none";
+                document.getElementById("success"+service).style.display = "block";
             }
         } else if (xhr.readyState == 4 && xhr.status != 200) {
-            document.getElementById("error"+service).style.display = "contents";
+            document.getElementById("error"+service).style.display = "block";
         }
     };
     xhr.send(service);
+}
+
+function viewService(service){
+    servicesModalLoading.style.display = "flex";
+    servicesModalBody.style.display = "none";
+    servicesModal.style.display = "flex";
+    servicesModal.children[0].style.opacity = 1;
+  
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/service.html?id=" + service, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            servicesModalBody.innerHTML = xhr.responseText;
+            servicesModalBody.style.display = "block";
+            servicesModalLoading.style.display = "none";
+        }
+    };
+    xhr.send();
 }

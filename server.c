@@ -124,7 +124,7 @@ int send500(int client_fd)
     return 500;
 }
 
-int send_http_response(int client_fd, const char* file_name, const char* file_ext)
+int send_http_response(int client_fd, const char* file_name, const char* file_ext, const char* query_params)
 {
     char file_path[BUFFER_SIZE];
     snprintf(file_path, BUFFER_SIZE, "static/%s", file_name);
@@ -132,20 +132,70 @@ int send_http_response(int client_fd, const char* file_name, const char* file_ex
     if (strcmp(file_ext, "html") == 0) {
         char* html_content = NULL;
 
+        get_params_t* params = NULL;
+        size_t get_params_size = 0;
+
+        if (query_params) {
+            params = malloc(sizeof(get_params_t) * BUFFER_SIZE);
+
+            char* param_string = strdup(query_params);
+            char* token = strtok(param_string, "&");
+            while (token) {
+                char* key = strtok(token, "=");
+                char* val = strtok(NULL, "=");
+
+                if (key && val) {
+                    params[get_params_size].key = strdup(key);
+                    params[get_params_size].val = strdup(val);
+                    get_params_size++;
+                }
+
+                token = strtok(NULL, "&");
+            }
+
+            free(param_string);
+        }
+
         for (size_t i = 0; i < _controllers.size; i++) {
             controller_t controller = _controllers.controllers[i];
             if (strcmp(controller.file, file_name) == 0) {
-                html_content = controller.fun(file_path);
+                html_content = controller.fun(file_path, params, get_params_size);
                 break;
             }
         }
 
         if (!html_content) {
-            free(html_content);
-            return send404(client_fd);
+            int file_fd = open(file_path, O_RDONLY);
+            if (file_fd == -1) {
+                return send404(client_fd);
+            }
+
+            struct stat file_stat;
+            fstat(file_fd, &file_stat);
+            off_t file_size = file_stat.st_size;
+
+            send200(client_fd, get_mime_type(file_ext), NULL, file_size);
+
+            off_t offset = 0;
+            while (offset < file_size) {
+                ssize_t sent = sendfile(client_fd, file_fd, &offset, file_size - offset);
+                if (sent <= 0) {
+                    WARNING("sendfile failed");
+                    break;
+                }
+            }
+
+            close(file_fd);
+            return 200;
         }
 
         send200(client_fd, "text/html", html_content, strlen(html_content));
+
+        for (size_t i = 0; i < get_params_size; i++) {
+            free(params[i].key);
+            free(params[i].val);
+        }
+        free(params);
 
         free(html_content);
         return 200;
@@ -270,21 +320,28 @@ void* handle_client(void* arg)
         snprintf(url_path, sizeof(url_path), "%.*s", matches[2].rm_eo - matches[2].rm_so, buffer + matches[2].rm_so);
 
         char* decoded_path = url_decode(url_path);
+        char* query_params = NULL;
+        char* question_mark = strchr(decoded_path, '?');
+        if (question_mark != NULL) {
+            *question_mark = '\0';
+            query_params = question_mark + 1;
+        }
         char* file_name = decoded_path;
 
         if (strcmp(method, "GET") == 0 && strlen(file_name) == 0) {
-            free(file_name);
+            free(decoded_path);
             file_name = strdup("index.html");
+            query_params = NULL;
         }
 
         if (strcmp(method, "POST") == 0) {
             status = send_post_response(client_fd, file_name, buffer, bytes_received);
         } else { // GET
             const char* file_ext = get_file_extension(file_name);
-            status = send_http_response(client_fd, file_name, file_ext);
+            status = send_http_response(client_fd, file_name, file_ext, query_params);
         }
 
-        free(file_name);
+        free(decoded_path);
     } else {
         status = send400(client_fd);
     }

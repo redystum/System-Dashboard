@@ -68,13 +68,7 @@ parser_args_list_t returnService(void* args)
     char command[256];
     parser_args_t* p_args = malloc(5 * sizeof(parser_args_t));
 
-#ifdef RASPBERRYPI
-    snprintf(command, sizeof(command), "systemctl show -p Description --value %s", service);
-#else
-    snprintf(command, sizeof(command), "echo %s", service); // Simulated service name
-#endif
-    char* name = runCommand(command);
-    p_args[0] = (parser_args_t) { .key = "name", .fun_cal = NULL, .fun_args = name };
+    p_args[0] = (parser_args_t) { .key = "name", .fun_cal = NULL, .fun_args = service };
 
 #ifdef RASPBERRYPI
     snprintf(command, sizeof(command), "systemctl status %s | grep 'CPU:' | awk '{print $2}' | head -n 1", service);
