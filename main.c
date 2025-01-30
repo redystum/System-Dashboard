@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
         INFO("No port given, using default = %d", DEFAULT_PORT);
     }
 
-    size_t controllers_size = 5;
+    size_t controllers_size = 7;
 
     controller_t* controllers = malloc(sizeof(controller_t) * controllers_size);
     if (!controllers) {
@@ -56,6 +56,8 @@ int main(int argc, char* argv[])
     controllers[2] = (controller_t) { .file = "addRelevantService", .fun = add_to_relevant_server_list };
     controllers[3] = (controller_t) { .file = "service.html", .fun = get_service };
     controllers[4] = (controller_t) { .file = "removeRelevantService", .fun = remove_from_relevant_server_list };
+    controllers[5] = (controller_t) { .file = "restartService", .fun = restart_service };
+    controllers[6] = (controller_t) { .file = "stopService", .fun = stop_service};
 
 #pragma GCC diagnostic pop
 

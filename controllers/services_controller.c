@@ -12,7 +12,7 @@ char* services_controller_init(char* file_path)
 
     char* services = NULL;
 #ifdef RASPBERRYPI
-    services = runCommandNoNewLine("systemctl list-units --type=service --no-legend --no-pager --output=json | jq -r '.[] | \"\\(.unit)|\\(.sub)|\\(.description)\"'");
+    services = runCommandNoNewLine("systemctl list-units --type=service --all --no-legend --no-pager --output=json | jq -r '.[] | \"\\(.unit)|\\(.sub)|\\(.description)\"'");
 #else
     services = strdup("sysdash.service|running|System Dashboard\nsysdash.service|exited|System Dashboard\nsysdash.service|running|System Dashboard");
 #endif
@@ -229,28 +229,109 @@ char* remove_from_relevant_server_list(char* service_name)
         return strdup("OK");
     }
 
-    char* line;
-    FILE* file = fopen("data/services.data.txt", "w");
+        char* line;
+    while ((line = ut_file_by_line_next(services_file)) != NULL) {
+        if (line == NULL) {
+            WARNING("Failed to read line from file");
+            ut_file_by_line_close(services_file);
+            return strdup("ERROR");
+        }
 
+        ut_trim(line);
+
+        if (strcmp(line, service_name) == 0) {
+            ut_file_by_line_close(services_file);
+            break;
+        }
+    }
+
+    if (line == NULL) {
+        WARNING("Service %s not found in list", service_name);
+        ut_file_by_line_close(services_file);
+        return strdup("OK");
+    }
+
+    FILE* file = fopen("data/services.data.txt", "w");
     if (file == NULL) {
         WARNING("Failed to open file %s", "data/services.data.txt");
         return strdup("ERROR");
     }
 
     while ((line = ut_file_by_line_next(services_file)) != NULL) {
-        ut_trim(line);
-
-        if (strcmp(line, service_name) == 0) {
-            continue;
+        if (line == NULL) {
+            WARNING("Failed to read line from file");
+            ut_file_by_line_close(services_file);
+            fclose(file);
+            return strdup("ERROR");
         }
 
-        fprintf(file, "%s\n", line);
+        ut_trim(line);
+
+        if (strcmp(line, service_name) != 0) {
+            fprintf(file, "%s\n", line);
+        }
     }
 
     ut_file_by_line_close(services_file);
+
     fclose(file);
 
     DEBUG("Service %s removed from list", service_name);
+
+    return strdup("OK");
+}
+
+char* restart_service(char* service_name)
+{
+#ifdef RASPBERRYPI
+    char* command = "systemctl restart %s";
+#else
+    char* command = "echo restarting service %s";
+#endif
+    char* command_with_service = malloc(strlen(command) + strlen(service_name) + 1);
+    if (command_with_service == NULL) {
+        WARNING("Failed to allocate memory for command_with_service");
+        return NULL;
+    }
+    sprintf(command_with_service, command, service_name);
+
+    char* response = runCommandNoNewLine(command_with_service);
+    if (response == NULL) {
+        WARNING("Failed to restart service %s", service_name);
+        return NULL;
+    }
+
+    DEBUG("Service %s restarted", service_name);
+
+    free(command_with_service);
+
+    return strdup("OK");
+}
+
+char* stop_service(char* service_name)
+{
+#ifdef RASPBERRYPI
+    char* command = "systemctl stop %s";
+#else
+    char* command = "echo stopping service %s";
+#endif
+
+    char* command_with_service = malloc(strlen(command) + strlen(service_name) + 1);
+    if (command_with_service == NULL) {
+        WARNING("Failed to allocate memory for command_with_service");
+        return NULL;
+    }
+    sprintf(command_with_service, command, service_name);
+
+    char* response = runCommandNoNewLine(command_with_service);
+    if (response == NULL) {
+        WARNING("Failed to stop service %s", service_name);
+        return NULL;
+    }
+
+    DEBUG("Service %s stopped", service_name);
+
+    free(command_with_service);
 
     return strdup("OK");
 }

@@ -88,3 +88,37 @@ function removeFromRelevant(service){
     };
     xhr.send(service);
 }
+
+function restartService(service){
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "/restartService", true);
+    xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            if (xhr.responseText == "OK") {
+                document.getElementById("restartService").style.display = "none";
+                document.getElementById("restartServiceSuccess").style.display = "block";
+            }
+        } else if (xhr.readyState == 4 && xhr.status != 200) {
+            document.getElementById("restartServiceError").style.display = "block";
+        }
+    };
+    xhr.send(service);
+}
+
+function stopService(service){
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "/stopService", true);
+    xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            if (xhr.responseText == "OK") {
+                document.getElementById("stopService").style.display = "none";
+                document.getElementById("stopServiceSuccess").style.display = "block";
+            }
+        } else if (xhr.readyState == 4 && xhr.status != 200) {
+            document.getElementById("stopServiceError").style.display = "block";
+        }
+    };
+    xhr.send(service);
+}
