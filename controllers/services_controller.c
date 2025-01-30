@@ -206,10 +206,11 @@ char* get_service(char* file_path, get_params_t* params, size_t get_params_size)
     ut_replace_text(&service, &service_len, "\n", "<br>");
 
     parser_args_t p_args[] = {
-        { .key = "service", .fun_cal = NULL, .fun_args = service }
+        { .key = "service", .fun_cal = NULL, .fun_args = service },
+        { .key = "name", .fun_cal = NULL, .fun_args = service_name }
     };
 
-    parser_args_list_t p_args_list = { .args = p_args, .size = 1 };
+    parser_args_list_t p_args_list = { .args = p_args, .size = 2 };
 
     char* html = html_parse(file_path, p_args_list);
 
@@ -217,4 +218,39 @@ char* get_service(char* file_path, get_params_t* params, size_t get_params_size)
     free(service);
 
     return html;
+}
+
+char* remove_from_relevant_server_list(char* service_name)
+{
+    ut_file_by_line_t* services_file = NULL;
+
+    if ((services_file = ut_file_by_line_open("data/services.data.txt")) == NULL) {
+        WARNING("Failed to read file %s: Not found ", "data/services.data.txt");
+        return strdup("OK");
+    }
+
+    char* line;
+    FILE* file = fopen("data/services.data.txt", "w");
+
+    if (file == NULL) {
+        WARNING("Failed to open file %s", "data/services.data.txt");
+        return strdup("ERROR");
+    }
+
+    while ((line = ut_file_by_line_next(services_file)) != NULL) {
+        ut_trim(line);
+
+        if (strcmp(line, service_name) == 0) {
+            continue;
+        }
+
+        fprintf(file, "%s\n", line);
+    }
+
+    ut_file_by_line_close(services_file);
+    fclose(file);
+
+    DEBUG("Service %s removed from list", service_name);
+
+    return strdup("OK");
 }

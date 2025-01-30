@@ -40,7 +40,7 @@ servicesModal.addEventListener("click", function(e) {
 function addRelevantService(service) {
     let xhr = new XMLHttpRequest();
     xhr.open("POST", "/addRelevantService", true);
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             if (xhr.responseText == "OK") {
@@ -70,4 +70,21 @@ function viewService(service){
         }
     };
     xhr.send();
+}
+
+function removeFromRelevant(service){
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "/removeRelevantService", true);
+    xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            if (xhr.responseText == "OK") {
+                document.getElementById("removeFromRelevant").style.display = "none";
+                document.getElementById("removeFromRelevantSuccess").style.display = "block";
+            }
+        } else if (xhr.readyState == 4 && xhr.status != 200) {
+            document.getElementById("removeFromRelevantError").style.display = "block";
+        }
+    };
+    xhr.send(service);
 }
