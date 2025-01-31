@@ -225,59 +225,57 @@ char* remove_from_relevant_server_list(char* service_name)
     ut_file_by_line_t* services_file = NULL;
 
     if ((services_file = ut_file_by_line_open("data/services.data.txt")) == NULL) {
-        WARNING("Failed to read file %s: Not found ", "data/services.data.txt");
+        WARNING("Failed to read file %s: Not found", "data/services.data.txt");
         return strdup("OK");
     }
 
-        char* line;
+    char* line;
+    char* final_file_text = NULL;
+    size_t final_len = 0;
+
     while ((line = ut_file_by_line_next(services_file)) != NULL) {
-        if (line == NULL) {
-            WARNING("Failed to read line from file");
+        DEBUG("line: %s, %s", line, service_name);
+
+        if (strcmp(line, service_name) == 0) {
+            continue;
+        }
+
+        size_t line_len = strlen(line) + 1;
+
+        if ((final_file_text = realloc(final_file_text, final_len + line_len + 1)) == NULL) {
+            WARNING("Failed to reallocate memory for final_file_text");
+            free(final_file_text);
             ut_file_by_line_close(services_file);
             return strdup("ERROR");
         }
 
-        ut_trim(line);
-
-        if (strcmp(line, service_name) == 0) {
-            ut_file_by_line_close(services_file);
-            break;
+        if (final_len == 0) {
+            strcpy(final_file_text, line);
+        } else {
+            strcat(final_file_text, "\n");
+            strcat(final_file_text, line);
         }
+        final_len += line_len;
     }
-
-    if (line == NULL) {
-        WARNING("Service %s not found in list", service_name);
-        ut_file_by_line_close(services_file);
-        return strdup("OK");
-    }
+    ut_file_by_line_close(services_file);
 
     FILE* file = fopen("data/services.data.txt", "w");
     if (file == NULL) {
         WARNING("Failed to open file %s", "data/services.data.txt");
+        free(final_file_text);
         return strdup("ERROR");
     }
 
-    while ((line = ut_file_by_line_next(services_file)) != NULL) {
-        if (line == NULL) {
-            WARNING("Failed to read line from file");
-            ut_file_by_line_close(services_file);
-            fclose(file);
-            return strdup("ERROR");
-        }
-
-        ut_trim(line);
-
-        if (strcmp(line, service_name) != 0) {
-            fprintf(file, "%s\n", line);
-        }
+    if (final_file_text != NULL) {
+        fprintf(file, "%s\n", final_file_text);
+        free(final_file_text);
+    } else {
+        fprintf(file, "\n");
     }
-
-    ut_file_by_line_close(services_file);
 
     fclose(file);
 
     DEBUG("Service %s removed from list", service_name);
-
     return strdup("OK");
 }
 

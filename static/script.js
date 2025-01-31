@@ -84,6 +84,7 @@ function removeFromRelevant(service){
             }
         } else if (xhr.readyState == 4 && xhr.status != 200) {
             document.getElementById("removeFromRelevantError").style.display = "block";
+            document.getElementById("removeFromRelevant").style.display = "none";  
         }
     };
     xhr.send(service);
@@ -101,6 +102,7 @@ function restartService(service){
             }
         } else if (xhr.readyState == 4 && xhr.status != 200) {
             document.getElementById("restartServiceError").style.display = "block";
+            document.getElementById("restartService").style.display = "none";
         }
     };
     xhr.send(service);
@@ -118,6 +120,7 @@ function stopService(service){
             }
         } else if (xhr.readyState == 4 && xhr.status != 200) {
             document.getElementById("stopServiceError").style.display = "block";
+            document.getElementById("stopService").style.display = "none";
         }
     };
     xhr.send(service);
