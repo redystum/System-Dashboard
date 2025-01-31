@@ -4,7 +4,7 @@ A system dashboard that monitors system resources and provides system informatio
 
 ![System Dashboard Screenshot](assets/Screenshot.png)
 
-Made with my own use case in mind, all made from scratch, the program is a server and a html parser.
+Made with my own use case in mind, all made from scratch, from the server to the html parser.
 
 ## Features
 
@@ -13,7 +13,7 @@ On the web interface:
 - Display RAM usage
 - Display Disk usage
 - Display system temperature
-- View and manage services
+- View and manage services (logs, start/restart, stop)
 - View program logs
 
 On the server:
@@ -30,11 +30,18 @@ On the server:
 
 ### Building the Project
 
-To build the project, run the following command:
+To build the project on linux, run the following command:
+
+```sh
+make raspberrypi
+```
+
+To build on WSL, just run:
 
 ```sh
 make
 ```
+(the reason for this is because WSL doesn't support systemctl so sample data is used when using `make` only) 
 
 ### Running the Project
 
